@@ -2,7 +2,9 @@ package com.postliu.wanandroid.common
 
 object Routes {
 
-    const val Home = "/home"
+    const val Register = "/register"
 
     const val Login = "/login"
+
+    const val Home = "/home"
 }

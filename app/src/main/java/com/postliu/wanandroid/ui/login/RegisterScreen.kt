@@ -1,12 +1,10 @@
 @file:OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalAnimationApi::class,
     ExperimentalLifecycleComposeApi::class,
+    ExperimentalMaterial3Api::class
 )
 
 package com.postliu.wanandroid.ui.login
 
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Column
@@ -31,7 +29,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,6 +39,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.ImeAction
@@ -54,44 +52,43 @@ import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
-import com.google.accompanist.navigation.animation.composable
+import androidx.navigation.compose.composable
 import com.postliu.wanandroid.R
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.common.UIResult
 import com.postliu.wanandroid.common.toast
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 
-fun NavGraphBuilder.login(navController: NavController) {
-    composable(Routes.Login) {
+fun NavGraphBuilder.register(navController: NavController) {
+    composable(Routes.Register) {
         val context = LocalContext.current
-        val viewModel: LoginViewModel = hiltViewModel()
-        val loginState by viewModel.loginState.collectAsStateWithLifecycle(initialValue = null)
-        LoginPage(popBackStack = {
+        val viewModel: RegisterViewModel = hiltViewModel()
+        val registerState by viewModel.register.collectAsStateWithLifecycle(initialValue = null)
+        // 添加页面
+        RegisterPage(popBackStack = {
             navController.popBackStack()
-        }, login = { userName, password ->
-            viewModel.dispatch(LoginAction.Login(userName, password))
-        }, toRegister = { navController.navigate(Routes.Register) })
-        LaunchedEffect(key1 = loginState, block = {
-            loginState?.let {
-                when (val data = it) {
+        }, register = { userName, password, rePassword ->
+            viewModel.dispatch(RegisterAction.Register(userName, password, rePassword))
+        })
+        // 监听状态
+        LaunchedEffect(key1 = registerState, block = {
+            registerState?.let {
+                when (it) {
                     is UIResult.Loading -> {
-                        println("Loading")
+
                     }
 
                     is UIResult.Throwable -> {
-                        println("Throwable")
-                        context.toast(data.throwable.message)
+                        context.toast(it.throwable)
                     }
 
                     is UIResult.Failed -> {
-                        println("Failed")
-                        context.toast(data.message)
+                        context.toast(it.message)
                     }
 
                     is UIResult.Success -> {
-                        println("登录成功")
-                        context.toast("登录成功")
-                        navController.popBackStack()
+                        context.toast("注册成功")
+                        navController.popBackStack(Routes.Home, false)
                     }
                 }
             }
@@ -100,23 +97,23 @@ fun NavGraphBuilder.login(navController: NavController) {
 }
 
 @Composable
-fun LoginPage(
+fun RegisterPage(
     popBackStack: () -> Unit = {},
-    login: (String, String) -> Unit = { _, _ -> },
-    toRegister: () -> Unit = {}
+    register: (String, String, String) -> Unit = { _, _, _ -> }
 ) {
-    println("登录页面")
+    println("进入注册页面")
     var userName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    var rePassword by remember { mutableStateOf("") }
     Scaffold(topBar = {
-        TopAppBar(title = { Text(text = "登录") }, navigationIcon = {
+        TopAppBar(title = { Text(text = "注册登录") }, navigationIcon = {
             IconButton(onClick = popBackStack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack, contentDescription = null
                 )
             }
         })
-    }) { paddingValues ->
+    }, containerColor = Color.White) { paddingValues ->
         Column(
             modifier = Modifier
                 .padding(paddingValues)
@@ -138,7 +135,7 @@ fun LoginPage(
             OutlinedTextField(
                 value = userName,
                 onValueChange = { userName = it },
-                label = { Text(text = "登录用户名") },
+                label = { Text(text = "注册用户名") },
                 leadingIcon = { Icon(Icons.Default.Phone, contentDescription = null) },
                 singleLine = true,
                 keyboardOptions = KeyboardOptions.Default.copy(
@@ -156,26 +153,32 @@ fun LoginPage(
                     keyboardType = KeyboardType.Password, imeAction = ImeAction.Go
                 ),
                 keyboardActions = KeyboardActions(onGo = {
-                    login.invoke(userName, password)
+                    register.invoke(userName, password, rePassword)
+                })
+            )
+            Spacer(modifier = Modifier.height(12.dp))
+            OutlinedTextField(
+                value = rePassword,
+                onValueChange = { rePassword = it },
+                label = { Text(text = "确认登录密码") },
+                leadingIcon = { Icon(imageVector = Icons.Default.Lock, contentDescription = null) },
+                visualTransformation = PasswordVisualTransformation(),
+                keyboardOptions = KeyboardOptions.Default.copy(
+                    keyboardType = KeyboardType.Password, imeAction = ImeAction.Go
+                ),
+                keyboardActions = KeyboardActions(onGo = {
+                    register.invoke(userName, password, rePassword)
                 })
             )
             Spacer(modifier = Modifier.height(12.dp))
             Button(
                 onClick = {
-                    login.invoke(userName, password)
+                    register.invoke(userName, password, rePassword)
                 }, modifier = Modifier
                     .padding(horizontal = 50.dp)
                     .fillMaxWidth()
             ) {
-                Text(text = "登录")
-            }
-            TextButton(
-                onClick = { toRegister.invoke() },
-                modifier = Modifier
-                    .padding(horizontal = 12.dp)
-                    .align(Alignment.Start),
-            ) {
-                Text(text = "没有账号？点击注册")
+                Text(text = "注册")
             }
         }
     }
@@ -183,8 +186,8 @@ fun LoginPage(
 
 @Preview
 @Composable
-fun LoginPagePreview() {
+fun RegisterPagePreview() {
     WanAndroidTheme {
-        LoginPage()
+        RegisterPage()
     }
 }

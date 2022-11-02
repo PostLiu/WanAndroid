@@ -9,7 +9,6 @@ import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.statusBarsPadding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Modifier
@@ -19,6 +18,7 @@ import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.ui.login.login
+import com.postliu.wanandroid.ui.login.register
 import com.postliu.wanandroid.ui.main.main
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -47,6 +47,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     main(navController)
                     login(navController)
+                    register(navController)
                 }
             }
         }

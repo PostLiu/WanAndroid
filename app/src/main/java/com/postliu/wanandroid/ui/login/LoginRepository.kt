@@ -35,6 +35,10 @@ class LoginRepository @Inject constructor(
      */
     fun register(userName: String, password: String, rePassword: String) = flow {
         val result = apiService.register(userName, password, rePassword)
-        emit(result.result)
+        if (result.success) {
+            emit(UIResult.Success(result.result))
+        } else {
+            emit(UIResult.Failed(result.errorCode, result.errorMsg))
+        }
     }.flowOn(Dispatchers.IO)
 }

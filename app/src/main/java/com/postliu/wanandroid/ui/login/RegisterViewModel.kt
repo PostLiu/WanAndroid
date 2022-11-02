@@ -14,26 +14,30 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class LoginViewModel @Inject constructor(
+class RegisterViewModel @Inject constructor(
     private val repository: LoginRepository
 ) : ViewModel() {
 
-    fun dispatch(action: LoginAction) = when (action) {
-        is LoginAction.Login -> {
-            login(userName = action.userName, password = action.password)
+    fun dispatch(action: RegisterAction) = when (action) {
+        is RegisterAction.Register -> {
+            register(action.userName, action.password, action.rePassword)
         }
     }
 
-    private val mLoginState = MutableSharedFlow<UIResult<LoginUserEntity>>()
-    var loginState = mLoginState.asSharedFlow()
+    private val mRegister = MutableSharedFlow<UIResult<LoginUserEntity>>()
+    val register = mRegister.asSharedFlow()
 
-    private fun login(userName: String, password: String) = viewModelScope.launch {
-        repository.login(userName, password).onStart {
-            mLoginState.emit(UIResult.Loading)
+    private fun register(
+        userName: String,
+        password: String,
+        rePassword: String
+    ) = viewModelScope.launch {
+        repository.register(userName, password, rePassword).onStart {
+            mRegister.emit(UIResult.Loading)
         }.catch {
-            mLoginState.emit(UIResult.Throwable(it))
+            mRegister.emit(UIResult.Throwable(it))
         }.collectLatest {
-            mLoginState.emit(it)
+            mRegister.emit(it)
         }
     }
 }
