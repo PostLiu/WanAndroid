@@ -1,88 +1,107 @@
-@file:OptIn(
-    ExperimentalAnimationApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalMaterial3Api::class
-)
-
 package com.postliu.wanandroid.ui.main
 
 import android.content.res.Resources
-import androidx.compose.animation.ExperimentalAnimationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.systemBarsPadding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material3.Button
-import androidx.compose.material3.DrawerValue
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.ModalNavigationDrawer
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.rememberDrawerState
-import androidx.compose.material3.surfaceColorAtElevation
+import androidx.compose.material.BottomNavigation
+import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.DrawerValue
+import androidx.compose.material.Icon
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.ModalDrawer
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TextButton
+import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavController
-import androidx.navigation.NavGraphBuilder
+import androidx.navigation.NavDestination.Companion.hierarchy
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.NavHostController
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
-import com.google.accompanist.navigation.animation.composable
-import com.google.accompanist.navigation.animation.rememberAnimatedNavController
 import com.postliu.wanandroid.common.Routes
+import com.postliu.wanandroid.ui.home.home
+import com.postliu.wanandroid.ui.login.login
+import com.postliu.wanandroid.ui.login.register
+import com.postliu.wanandroid.ui.official.official
+import com.postliu.wanandroid.ui.project.project
+import com.postliu.wanandroid.ui.square.square
+import com.postliu.wanandroid.ui.system.system
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
-
-fun NavGraphBuilder.main(navController: NavController) {
-    composable(Routes.Home) {
-        MainPage(navController = navController)
-    }
-}
+import kotlinx.coroutines.launch
 
 @Composable
-fun MainPage(navController: NavController = rememberAnimatedNavController()) {
+fun MainPage() {
+    val navController: NavHostController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
-    ModalNavigationDrawer(
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentDestination = navBackStackEntry?.destination
+    val scope = rememberCoroutineScope()
+
+    ModalDrawer(
         modifier = Modifier.fillMaxSize(),
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent(
-                navController = navController
-            )
+            DrawerContent() {
+                navController.navigate(Routes.Login)
+                scope.launch {
+                    drawerState.close()
+                }
+            }
         },
-        scrimColor = MaterialTheme.colorScheme.surfaceColorAtElevation(5.dp),
+        scrimColor = Color(0x50000000),
         content = {
-            Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-                TopAppBar(title = { Text(text = "首页") }, navigationIcon = {
-                    IconButton(onClick = {}) {
-                        Icon(imageVector = Icons.Default.Menu, contentDescription = null)
+            Scaffold(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .systemBarsPadding()
+                    .navigationBarsPadding(),
+                bottomBar = {
+                    when (currentDestination?.route) {
+                        Routes.Home -> BottomNavBarView(navController = navController)
+                        Routes.Square -> BottomNavBarView(navController = navController)
+                        Routes.Official -> BottomNavBarView(navController = navController)
+                        Routes.System -> BottomNavBarView(navController = navController)
+                        Routes.Project -> BottomNavBarView(navController = navController)
                     }
-                })
-            }) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(it)
+                }) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.Home,
+                    modifier = Modifier.padding(it)
                 ) {
-                    Button(onClick = { navController.navigate(Routes.Login) }) {
-                        Text(text = "去登录")
-                    }
+                    home(navController)
+                    square(navController)
+                    official(navController)
+                    system(navController)
+                    project(navController)
+                    login(navController)
+                    register(navController)
                 }
             }
         }
@@ -93,7 +112,7 @@ fun MainPage(navController: NavController = rememberAnimatedNavController()) {
 fun DrawerContent(
     loginState: Boolean = false,
     loginName: String = "你知道我是谁吗",
-    navController: NavController = rememberAnimatedNavController(),
+    login: () -> Unit = {},
 ) {
     val width = with(LocalDensity.current) {
         (Resources.getSystem().displayMetrics.widthPixels / 4 * 3) / density
@@ -102,7 +121,7 @@ fun DrawerContent(
         Modifier
             .width(width = width.dp)
             .fillMaxHeight()
-            .background(MaterialTheme.colorScheme.background),
+            .background(MaterialTheme.colors.background),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Image(
@@ -112,17 +131,68 @@ fun DrawerContent(
                 .padding(12.dp)
                 .size(width.div(3).dp)
                 .clip(CircleShape)
-                .border(1.dp, MaterialTheme.colorScheme.primary, CircleShape),
+                .border(1.dp, MaterialTheme.colors.primary, CircleShape),
             contentScale = ContentScale.FillWidth
         )
         if (loginState) {
             Text(text = loginName)
         } else {
             TextButton(onClick = {
-                navController.navigate(Routes.Login)
+                login.invoke()
             }) {
                 Text(text = "去登录")
             }
+        }
+    }
+}
+
+@Composable
+fun BottomNavBarView(
+    navController: NavHostController,
+    bottomNav: List<BottomNav> = listOf(
+        BottomNav.Home,
+        BottomNav.Square,
+        BottomNav.Official,
+        BottomNav.System,
+        BottomNav.Project
+    )
+) {
+    BottomNavigation(
+        modifier = Modifier.fillMaxWidth(),
+        backgroundColor = MaterialTheme.colors.background
+    ) {
+        val navBackStackEntry by navController.currentBackStackEntryAsState()
+        val currentDestination = navBackStackEntry?.destination
+        bottomNav.forEach { nav ->
+            BottomNavigationItem(
+                selected = currentDestination?.hierarchy?.any { it.route == nav.route } == true,
+                onClick = {
+                    println("BottomNavView当前路由 ===> ${currentDestination?.hierarchy?.toList()}")
+                    println("当前路由栈 ===> ${navController.graph.nodes}")
+                    if (currentDestination?.route != nav.route) {
+                        navController.navigate(nav.route) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                },
+                icon = {
+                    Icon(
+                        imageVector = ImageVector.vectorResource(id = nav.icon),
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp),
+                    )
+                },
+                label = {
+                    Text(text = nav.name)
+                },
+                alwaysShowLabel = true,
+                selectedContentColor = MaterialTheme.colors.primary,
+                unselectedContentColor = Color.Gray,
+            )
         }
     }
 }
@@ -132,7 +202,10 @@ fun DrawerContent(
 fun MainPagePreview() {
     WanAndroidTheme {
         Column {
-            DrawerContent()
+            MainPage()
+            DrawerContent() {
+
+            }
         }
     }
 }

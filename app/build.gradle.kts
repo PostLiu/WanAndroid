@@ -13,7 +13,7 @@ android {
 
     defaultConfig {
         applicationId = "com.postliu.wanandroid"
-        minSdk = 23
+        minSdk = 24
         targetSdk = 33
         versionCode = 100
         versionName = "1.0.0"
@@ -30,8 +30,7 @@ android {
         release {
             isMinifyEnabled = false
             proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro"
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
         }
     }
@@ -62,6 +61,8 @@ android {
 dependencies {
     val composeVersion = "1.3.0"
     val accompanistVersion = "0.27.0"
+    implementation("androidx.paging:paging-compose:1.0.0-alpha17")
+    implementation("com.github.zhujiang521:Banner:2.4.0")
     implementation("androidx.lifecycle:lifecycle-runtime-compose:2.6.0-alpha03")
     implementation("com.github.ihsanbal:LoggingInterceptor:3.1.0") {
         exclude(group = "org.json", module = "json")
@@ -71,10 +72,11 @@ dependencies {
     implementation("com.squareup.retrofit2:converter-gson:2.9.0")
     implementation("io.coil-kt:coil-compose:2.2.2")
     implementation("androidx.hilt:hilt-navigation-compose:1.0.0")
+    implementation("androidx.navigation:navigation-compose:2.5.3")
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.5.1")
     implementation("com.google.dagger:hilt-android:2.44")
     kapt("com.google.dagger:hilt-compiler:2.44")
-    implementation("com.google.accompanist:accompanist-navigation-animation:$accompanistVersion")
+    implementation("com.google.accompanist:accompanist-swiperefresh:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-drawablepainter:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
     implementation("androidx.core:core-ktx:1.8.0")
@@ -82,7 +84,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.5.1")
     implementation("androidx.compose.ui:ui:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")
-    implementation("androidx.compose.material3:material3:1.0.0")
+    implementation("androidx.compose.material:material:1.3.0")
     testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test.ext:junit:1.1.3")
     androidTestImplementation("androidx.test.espresso:espresso-core:3.4.0")

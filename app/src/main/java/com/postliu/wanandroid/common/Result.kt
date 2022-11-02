@@ -1,14 +1,18 @@
 package com.postliu.wanandroid.common
 
+import androidx.annotation.Keep
+import com.google.gson.annotations.SerializedName
 import okio.IOException
 
 class TokenException(val code: Int, override val message: String) : IOException(message)
 
 class QuestException(val code: Int, override val message: String) : IOException(message)
 
-data class DataResult<out T : Any>(
+@Keep
+data class DataResult<out T>(
     val errorCode: Int,
     val errorMsg: String,
+    @SerializedName("data")
     val `data`: T
 ) {
     val result = when (errorCode) {

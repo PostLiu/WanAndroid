@@ -1,10 +1,15 @@
 package com.postliu.wanandroid.model
 
 import com.postliu.wanandroid.common.DataResult
+import com.postliu.wanandroid.model.entity.ArticleEntity
+import com.postliu.wanandroid.model.entity.HomeArticleEntity
 import com.postliu.wanandroid.model.entity.LoginUserEntity
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
+import retrofit2.http.GET
 import retrofit2.http.POST
+import retrofit2.http.Path
+import retrofit2.http.Query
 
 interface ApiService {
 
@@ -37,4 +42,18 @@ interface ApiService {
         @Field("password") password: String,
         @Field("repassword") rePassword: String,
     ): DataResult<LoginUserEntity>
+
+    /**
+     * 置顶文章
+     *
+     */
+    @GET("/article/top/json")
+    suspend fun stickyPostsArticle(): DataResult<List<ArticleEntity>>
+
+    @GET("/article/list/{page}/json")
+    suspend fun homeArticle(
+        @Path("page") page: Int = 0,
+        @Query("page_size") pageSize: Int = 10
+    ): DataResult<HomeArticleEntity>
+
 }
