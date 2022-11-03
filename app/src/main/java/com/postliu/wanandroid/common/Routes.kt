@@ -2,6 +2,8 @@ package com.postliu.wanandroid.common
 
 object Routes {
 
+    const val Collect = "/collect"
+
     const val ArticleDetails = "/article_details"
 
     const val Project = "/project"

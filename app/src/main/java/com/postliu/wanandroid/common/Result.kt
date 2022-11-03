@@ -25,6 +25,24 @@ data class DataResult<out T>(
     val success get() = errorCode == 0
 }
 
+@Keep
+data class BasePagingEntity<out T>(
+    @SerializedName("curPage")
+    val curPage: Int,
+    @SerializedName("datas")
+    val datas: List<T>,
+    @SerializedName("offset")
+    val offset: Int,
+    @SerializedName("over")
+    val over: Boolean,
+    @SerializedName("pageCount")
+    val pageCount: Int,
+    @SerializedName("size")
+    val size: Int,
+    @SerializedName("total")
+    val total: Int
+)
+
 sealed interface UIResult<out T> {
     object Loading : UIResult<Nothing>
     data class Throwable(val throwable: kotlin.Throwable) : UIResult<Nothing>

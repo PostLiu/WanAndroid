@@ -5,12 +5,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
 import androidx.paging.cachedIn
+import com.postliu.wanandroid.common.FlowPagingData
 import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.BannerEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.flow.onStart
@@ -72,5 +71,5 @@ data class HomeViewState(
     val isRefresh: Boolean = false,
     val bannerList: List<BannerEntity> = emptyList(),
     val stickyPostsArticle: List<ArticleEntity> = emptyList(),
-    val article: Flow<PagingData<ArticleEntity>>
+    val article: FlowPagingData<ArticleEntity>
 )

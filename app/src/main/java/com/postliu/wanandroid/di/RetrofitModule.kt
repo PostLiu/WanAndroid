@@ -5,6 +5,8 @@ import com.google.gson.ToNumberPolicy
 import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
 import com.postliu.wanandroid.BuildConfig
+import com.postliu.wanandroid.network.ReceivedCookiesInterceptor
+import com.postliu.wanandroid.network.SetCookiesInterceptor
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -22,24 +24,21 @@ object RetrofitModule {
     @Provides
     fun providerOkHttpClient(): OkHttpClient {
         return OkHttpClient.Builder()
-            .addInterceptor(
-                LoggingInterceptor.Builder()
-                    .setLevel(Level.BODY)
-                    .build()
-            ).build()
+            .addInterceptor(LoggingInterceptor.Builder().setLevel(Level.BODY).build())
+            .addInterceptor(ReceivedCookiesInterceptor())
+            .addInterceptor(SetCookiesInterceptor())
+            .build()
     }
 
     @Singleton
     @Provides
     fun providerRetrofit(okHttpClient: OkHttpClient): Retrofit {
-        return Retrofit.Builder()
-            .baseUrl(BuildConfig.BASE_IP)
-            .addConverterFactory(
-                GsonConverterFactory.create(
-                    GsonBuilder().setObjectToNumberStrategy(
-                        ToNumberPolicy.LAZILY_PARSED_NUMBER
-                    ).create()
-                )
-            ).client(okHttpClient).build()
+        return Retrofit.Builder().baseUrl(BuildConfig.BASE_IP).addConverterFactory(
+            GsonConverterFactory.create(
+                GsonBuilder().setObjectToNumberStrategy(
+                    ToNumberPolicy.LAZILY_PARSED_NUMBER
+                ).create()
+            )
+        ).client(okHttpClient).build()
     }
 }

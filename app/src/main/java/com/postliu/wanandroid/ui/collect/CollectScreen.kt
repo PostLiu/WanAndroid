@@ -1,0 +1,108 @@
+@file:OptIn(ExperimentalMaterialApi::class)
+
+package com.postliu.wanandroid.ui.collect
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material.ExperimentalMaterialApi
+import androidx.compose.material.Icon
+import androidx.compose.material.IconButton
+import androidx.compose.material.ListItem
+import androidx.compose.material.MaterialTheme
+import androidx.compose.material.Scaffold
+import androidx.compose.material.Text
+import androidx.compose.material.TopAppBar
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
+import androidx.compose.material.icons.filled.Favorite
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.navigation.NavController
+import androidx.navigation.NavGraphBuilder
+import androidx.navigation.compose.composable
+import androidx.paging.compose.LazyPagingItems
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.items
+import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.common.Routes
+import com.postliu.wanandroid.model.entity.CollectArticleEntity
+import com.postliu.wanandroid.ui.theme.WanAndroidTheme
+import com.postliu.wanandroid.widgets.RefreshPagingList
+
+fun NavGraphBuilder.userCollect(navController: NavController) {
+    composable(Routes.Collect) {
+        val viewModel: UserCollectViewModel = hiltViewModel()
+        val viewState = viewModel.viewState
+        val isRefresh = viewState.isRefresh
+        val article = viewState.article.collectAsLazyPagingItems()
+        UserCollectPage(article = article,
+            isRefresh = isRefresh,
+            popBackStack = { navController.popBackStack() })
+    }
+}
+
+@Composable
+fun UserCollectPage(
+    article: LazyPagingItems<CollectArticleEntity>,
+    isRefresh: Boolean,
+    popBackStack: () -> Unit = {}
+) {
+    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
+        TopAppBar(title = { Text(text = "我的收藏") }, navigationIcon = {
+            IconButton(onClick = { popBackStack() }) {
+                Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
+            }
+        })
+    }) { paddingValues ->
+        RefreshPagingList(lazyPagingItems = article, itemContent = {
+            items(article) { entity ->
+                entity?.let { CollectArticleItem(collectArticle = it) }
+            }
+        }, paddingValues = paddingValues, isRefreshing = isRefresh)
+    }
+}
+
+@Composable
+private fun CollectArticleItem(collectArticle: CollectArticleEntity) {
+    ListItem(modifier = Modifier
+        .fillMaxWidth()
+        .background(MaterialTheme.colors.background),
+        singleLineSecondaryText = true,
+        secondaryText = {
+            Text(text = collectArticle.author)
+        },
+        trailing = {
+            IconButton(onClick = {}) {
+                Icon(
+                    imageVector = Icons.Default.Favorite,
+                    contentDescription = null,
+                    tint = Color.Red
+                )
+            }
+        },
+        text = {
+            Text(
+                text = collectArticle.title,
+                style = MaterialTheme.typography.body1,
+                fontWeight = FontWeight.Bold
+            )
+        })
+}
+
+@Preview
+@Composable
+fun CollectArticlePreview() {
+    WanAndroidTheme {
+        val json =
+            "{\n" + "                \"author\": \"zsml2016\",\n" + "                \"chapterId\": 358,\n" + "                \"chapterName\": \"项目基础功能\",\n" + "                \"courseId\": 13,\n" + "                \"desc\": \"现在的绝大数APP特别是类似淘宝京东等这些大型APP都有文字轮播界面，实现循环轮播多个广告词等功能，而TextBannerView已经实现了这些功能，只需几行代码集成，便可实现水平或垂直轮播文字。\",\n" + "                \"envelopePic\": \"http://wanandroid.com/resources/image/pc/default_project_img.jpg\",\n" + "                \"id\": 132179,\n" + "                \"link\": \"http://www.wanandroid.com/blog/show/2382\",\n" + "                \"niceDate\": \"2020-05-11 10:11\",\n" + "                \"origin\": \"\",\n" + "                \"originId\": 3453,\n" + "                \"publishTime\": 1589163090000,\n" + "                \"title\": \"Android文字轮播控件 TextBannerView\",\n" + "                \"userId\": 41641,\n" + "                \"visible\": 0,\n" + "                \"zan\": 0\n" + "            }"
+        val articleEntity = with(GsonUtils) {
+            fromJson(json, CollectArticleEntity::class.java)
+        }
+        CollectArticleItem(collectArticle = articleEntity)
+    }
+}

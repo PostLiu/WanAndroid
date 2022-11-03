@@ -2,6 +2,7 @@ package com.postliu.wanandroid.ui.home
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -58,7 +59,9 @@ fun NavGraphBuilder.home(navController: NavController) {
             bannerList = bannerList,
             sticky = sticky,
             articleList = homeArticleState,
-            isRefresh = isRefresh
+            isRefresh = isRefresh,
+            bannerClick = {},
+            articleClick = {}
         )
     }
 }
@@ -68,7 +71,9 @@ fun HomePage(
     bannerList: List<BannerEntity> = emptyList(),
     sticky: List<ArticleEntity>,
     articleList: LazyPagingItems<ArticleEntity>,
-    isRefresh: Boolean
+    isRefresh: Boolean,
+    bannerClick: (BannerEntity) -> Unit = {},
+    articleClick: (ArticleEntity) -> Unit = {}
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
         RefreshPagingList(
@@ -78,19 +83,25 @@ fun HomePage(
             itemContent = {
                 if (bannerList.isNotEmpty()) {
                     item {
-                        Banner(dataList = bannerList) {
-
+                        Banner(dataList = bannerList) { entity ->
+                            bannerClick.invoke(entity)
                         }
                     }
                 }
                 if (sticky.isNotEmpty()) {
                     items(sticky) {
-                        HomeArticleView(articleEntity = it, isStick = true)
+                        HomeArticleView(articleEntity = it, isStick = true) { entity ->
+                            articleClick.invoke(entity)
+                        }
                         Divider()
                     }
                 }
                 items(articleList) { articleEntity ->
-                    articleEntity?.let { HomeArticleView(articleEntity = it) }
+                    articleEntity?.let {
+                        HomeArticleView(articleEntity = it) { entity ->
+                            articleClick.invoke(entity)
+                        }
+                    }
                     Divider()
                 }
             })
@@ -98,12 +109,17 @@ fun HomePage(
 }
 
 @Composable
-fun HomeArticleView(articleEntity: ArticleEntity, isStick: Boolean = false) {
+fun HomeArticleView(
+    articleEntity: ArticleEntity,
+    isStick: Boolean = false,
+    click: (ArticleEntity) -> Unit = {}
+) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
             .background(MaterialTheme.colors.background)
             .padding(12.dp)
+            .clickable { click.invoke(articleEntity) }
     ) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.Top) {

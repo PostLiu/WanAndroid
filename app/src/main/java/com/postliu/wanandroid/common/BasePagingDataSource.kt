@@ -2,10 +2,14 @@ package com.postliu.wanandroid.common
 
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
+import androidx.paging.PagingData
 import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flowOn
+
+typealias FlowPagingData<T> = Flow<PagingData<T>>
 
 abstract class BasePagingSource<Value : Any> : PagingSource<Int, Value>() {
 
@@ -57,14 +61,11 @@ inline fun <reified T : Any> intKeyPagingSource(
  */
 inline fun <reified T : Any> launchPagingFlow(
     crossinline block: suspend (page: Int) -> List<T>
-) = Pager(
-    config = defaultPagingConfig,
-    pagingSourceFactory = {
-        intKeyPagingSource {
-            block.invoke(it)
-        }
+) = Pager(config = defaultPagingConfig, pagingSourceFactory = {
+    intKeyPagingSource {
+        block.invoke(it)
     }
-).flow.flowOn(Dispatchers.IO)
+}).flow.flowOn(Dispatchers.IO)
 
 inline fun <reified T : Any> intKeyZeroPagingSource(
     crossinline block: suspend (page: Int) -> List<T>
@@ -85,11 +86,8 @@ inline fun <reified T : Any> intKeyZeroPagingSource(
 
 inline fun <reified T : Any> launchPagingFromZeroFlow(
     crossinline block: suspend (page: Int) -> List<T>
-) = Pager(
-    config = defaultPagingConfig,
-    pagingSourceFactory = {
-        intKeyZeroPagingSource {
-            block.invoke(it)
-        }
+) = Pager(config = defaultPagingConfig, pagingSourceFactory = {
+    intKeyZeroPagingSource {
+        block.invoke(it)
     }
-).flow.flowOn(Dispatchers.IO)
+}).flow.flowOn(Dispatchers.IO)

@@ -1,8 +1,8 @@
 package com.postliu.wanandroid.model.entity
 
 
-import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
+import com.google.gson.annotations.SerializedName
 
 @Keep
 data class LoginUserEntity(
@@ -32,4 +32,22 @@ data class LoginUserEntity(
     val type: Int,
     @SerializedName("username")
     val username: String
-)
+) {
+    companion object {
+        fun empty() = LoginUserEntity(
+            false,
+            emptyList(),
+            0,
+            emptyList(),
+            "",
+            "",
+            0,
+            "你知道我是谁吗",
+            "",
+            "",
+            "",
+            0,
+            ""
+        )
+    }
+}

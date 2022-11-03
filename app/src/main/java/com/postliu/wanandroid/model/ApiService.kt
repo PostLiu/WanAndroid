@@ -1,10 +1,12 @@
 package com.postliu.wanandroid.model
 
+import com.postliu.wanandroid.common.BasePagingEntity
 import com.postliu.wanandroid.common.DataResult
 import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.BannerEntity
-import com.postliu.wanandroid.model.entity.HomeArticleEntity
+import com.postliu.wanandroid.model.entity.CollectArticleEntity
 import com.postliu.wanandroid.model.entity.LoginUserEntity
+import com.postliu.wanandroid.model.entity.UserEntity
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
 import retrofit2.http.GET
@@ -70,6 +72,26 @@ interface ApiService {
     suspend fun homeArticle(
         @Path("page") page: Int,
         @Query("page_size") pageSize: Int = 10
-    ): DataResult<HomeArticleEntity>
+    ): DataResult<BasePagingEntity<ArticleEntity>>
 
+    /**
+     * 登录用户信息
+     *
+     * @return
+     */
+    @GET("/user/lg/userinfo/json")
+    suspend fun userInfo(): DataResult<UserEntity>
+
+    /**
+     * 用户收藏的文章
+     *
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    @GET("/lg/collect/list/{page}/json")
+    suspend fun collectArticle(
+        @Path("page") page: Int,
+        @Query("page_size") pageSize: Int = 10
+    ): DataResult<BasePagingEntity<CollectArticleEntity>>
 }
