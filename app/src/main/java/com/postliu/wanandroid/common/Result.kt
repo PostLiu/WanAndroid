@@ -15,11 +15,12 @@ data class DataResult<out T>(
     @SerializedName("data")
     val `data`: T
 ) {
-    val result = when (errorCode) {
-        0 -> data
-        -1001 -> throw TokenException(errorCode, errorMsg)
-        else -> throw QuestException(errorCode, errorMsg)
-    }
+    val result
+        get() = when (errorCode) {
+            0 -> `data`
+            -1001 -> throw TokenException(errorCode, errorMsg)
+            else -> throw QuestException(errorCode, errorMsg)
+        }
 
     val success get() = errorCode == 0
 }

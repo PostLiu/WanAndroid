@@ -2,9 +2,14 @@ package com.postliu.wanandroid.common
 
 object Routes {
 
+    const val ArticleDetails = "/article_details"
+
     const val Project = "/project"
+
     const val System = "/system"
+
     const val Official = "/official"
+
     const val Square = "/square"
 
     const val Register = "/register"
@@ -12,6 +17,4 @@ object Routes {
     const val Login = "/login"
 
     const val Home = "/home"
-
-    const val Main = "/main"
 }

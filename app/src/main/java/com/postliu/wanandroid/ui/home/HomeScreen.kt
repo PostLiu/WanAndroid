@@ -9,17 +9,15 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
-import androidx.compose.material.icons.filled.Menu
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,32 +51,44 @@ fun NavGraphBuilder.home(navController: NavController) {
         val context = LocalContext.current
         val viewModel: HomeViewModel = hiltViewModel()
         val homeArticleState = viewModel.viewState.article.collectAsLazyPagingItems()
-        HomePage(articleList = homeArticleState)
+        val bannerList = viewModel.viewState.bannerList
+        val sticky = viewModel.viewState.stickyPostsArticle
+        val isRefresh = viewModel.viewState.isRefresh
+        HomePage(
+            bannerList = bannerList,
+            sticky = sticky,
+            articleList = homeArticleState,
+            isRefresh = isRefresh
+        )
     }
 }
 
 @Composable
 fun HomePage(
     bannerList: List<BannerEntity> = emptyList(),
-    articleList: LazyPagingItems<ArticleEntity>
+    sticky: List<ArticleEntity>,
+    articleList: LazyPagingItems<ArticleEntity>,
+    isRefresh: Boolean
 ) {
-    Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-        TopAppBar(title = {
-            Text(text = "首页")
-        }, navigationIcon = {
-            IconButton(onClick = {}) {
-                Icon(imageVector = Icons.Default.Menu, contentDescription = null)
-            }
-        }, modifier = Modifier.fillMaxWidth(), actions = {
-            IconButton(onClick = {}) {
-                Icon(imageVector = Icons.Default.Search, contentDescription = null)
-            }
-        }, backgroundColor = MaterialTheme.colors.primary)
-    }) { paddingValues ->
+    Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
         RefreshPagingList(
             paddingValues = paddingValues,
             lazyPagingItems = articleList,
+            isRefreshing = isRefresh,
             itemContent = {
+                if (bannerList.isNotEmpty()) {
+                    item {
+                        Banner(dataList = bannerList) {
+
+                        }
+                    }
+                }
+                if (sticky.isNotEmpty()) {
+                    items(sticky) {
+                        HomeArticleView(articleEntity = it, isStick = true)
+                        Divider()
+                    }
+                }
                 items(articleList) { articleEntity ->
                     articleEntity?.let { HomeArticleView(articleEntity = it) }
                     Divider()
@@ -88,7 +98,7 @@ fun HomePage(
 }
 
 @Composable
-fun HomeArticleView(articleEntity: ArticleEntity) {
+fun HomeArticleView(articleEntity: ArticleEntity, isStick: Boolean = false) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -105,6 +115,17 @@ fun HomeArticleView(articleEntity: ArticleEntity) {
                         modifier = Modifier
                             .padding(end = 4.dp, top = 3.dp)
                             .border(1.dp, Color.Red, MaterialTheme.shapes.small)
+                            .padding(horizontal = 6.dp, vertical = 2.dp)
+                    )
+                }
+                if (isStick) {
+                    Text(
+                        text = "置顶",
+                        color = Color.Green,
+                        style = MaterialTheme.typography.h1,
+                        modifier = Modifier
+                            .padding(end = 4.dp, top = 3.dp)
+                            .border(1.dp, Color.Green, MaterialTheme.shapes.small)
                             .padding(horizontal = 6.dp, vertical = 2.dp)
                     )
                 }
@@ -139,7 +160,7 @@ fun HomeArticleView(articleEntity: ArticleEntity) {
                                 append(articleEntity.superChapterName)
                                 append("\t/\t")
                             }
-                            append(articleEntity.author.ifBlank { articleEntity.shareUser })
+                            append(articleEntity.author.ifEmpty { articleEntity.shareUser })
                         }
                     },
                     style = MaterialTheme.typography.h1,
@@ -168,16 +189,19 @@ fun HomeArticleView(articleEntity: ArticleEntity) {
 fun Banner(
     dataList: List<BannerEntity>,
     config: BannerConfig = BannerConfig(),
+    itemClick: (BannerEntity) -> Unit = {}
 ) {
     BannerPager(
-        onBannerClick = {},
+        onBannerClick = {
+            itemClick(it)
+        },
         modifier = Modifier
             .fillMaxWidth()
             .aspectRatio(2f),
         items = dataList,
         config = config,
         indicatorGravity = Alignment.BottomCenter,
-        indicatorIsVertical = true
+        indicatorIsVertical = false
     )
 }
 
@@ -230,6 +254,6 @@ fun HomeArticleViewPreview() {
         val articleEntity = with(GsonUtils) {
             fromJson(json = json, ArticleEntity::class.java)
         }
-        HomeArticleView(articleEntity = articleEntity)
+        HomeArticleView(articleEntity = articleEntity, isStick = true)
     }
 }

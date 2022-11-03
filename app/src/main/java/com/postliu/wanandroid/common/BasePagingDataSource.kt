@@ -10,10 +10,7 @@ import kotlinx.coroutines.flow.flowOn
 abstract class BasePagingSource<Value : Any> : PagingSource<Int, Value>() {
 
     override fun getRefreshKey(state: PagingState<Int, Value>): Int? {
-        return state.anchorPosition?.let {
-            val anchorPage = state.closestPageToPosition(it)
-            anchorPage?.prevKey?.plus(1) ?: anchorPage?.nextKey?.minus(1)
-        }
+        return state.anchorPosition
     }
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Value> {
@@ -46,7 +43,7 @@ inline fun <reified T : Any> intKeyPagingSource(
             LoadResult.Page(
                 data = dataList,
                 prevKey = null,
-                nextKey = if (dataList.size < 10) null else page + 1
+                nextKey = if (dataList.isEmpty()) null else page + 1
             )
         }.getOrElse { LoadResult.Error(it) }
     }
@@ -80,7 +77,7 @@ inline fun <reified T : Any> intKeyZeroPagingSource(
             LoadResult.Page(
                 data = dataList,
                 prevKey = null,
-                nextKey = if (dataList.size < 10) null else page + 1
+                nextKey = if (dataList.isEmpty()) null else page + 1
             )
         }.getOrElse { LoadResult.Error(it) }
     }

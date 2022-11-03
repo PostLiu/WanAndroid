@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.BottomNavigation
 import androidx.compose.material.BottomNavigationItem
+import androidx.compose.material.DrawerState
 import androidx.compose.material.DrawerValue
 import androidx.compose.material.Icon
 import androidx.compose.material.MaterialTheme
@@ -37,6 +38,7 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.vectorResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -53,6 +55,8 @@ import com.postliu.wanandroid.ui.project.project
 import com.postliu.wanandroid.ui.square.square
 import com.postliu.wanandroid.ui.system.system
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
+import com.postliu.wanandroid.widgets.TopSearchAppBar
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
@@ -63,11 +67,10 @@ fun MainPage() {
     val currentDestination = navBackStackEntry?.destination
     val scope = rememberCoroutineScope()
 
-    ModalDrawer(
-        modifier = Modifier.fillMaxSize(),
+    ModalDrawer(modifier = Modifier.fillMaxSize(),
         drawerState = drawerState,
         drawerContent = {
-            DrawerContent() {
+            DrawerContent {
                 navController.navigate(Routes.Login)
                 scope.launch {
                     drawerState.close()
@@ -76,19 +79,15 @@ fun MainPage() {
         },
         scrimColor = Color(0x50000000),
         content = {
-            Scaffold(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .systemBarsPadding()
-                    .navigationBarsPadding(),
+            Scaffold(modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .navigationBarsPadding(),
+                topBar = {
+                    TopBarNavigation(currentDestination, scope, drawerState)
+                },
                 bottomBar = {
-                    when (currentDestination?.route) {
-                        Routes.Home -> BottomNavBarView(navController = navController)
-                        Routes.Square -> BottomNavBarView(navController = navController)
-                        Routes.Official -> BottomNavBarView(navController = navController)
-                        Routes.System -> BottomNavBarView(navController = navController)
-                        Routes.Project -> BottomNavBarView(navController = navController)
-                    }
+                    BottomBarNavigation(currentDestination, navController)
                 }) {
                 NavHost(
                     navController = navController,
@@ -104,12 +103,89 @@ fun MainPage() {
                     register(navController)
                 }
             }
-        }
-    )
+        })
 }
 
 @Composable
-fun DrawerContent(
+private fun BottomBarNavigation(
+    currentDestination: NavDestination?,
+    navController: NavHostController
+) {
+    when (currentDestination?.route) {
+        Routes.Home -> BottomNavBarView(navController = navController)
+        Routes.Square -> BottomNavBarView(navController = navController)
+        Routes.Official -> BottomNavBarView(navController = navController)
+        Routes.System -> BottomNavBarView(navController = navController)
+        Routes.Project -> BottomNavBarView(navController = navController)
+    }
+}
+
+@Composable
+private fun TopBarNavigation(
+    currentDestination: NavDestination?,
+    scope: CoroutineScope,
+    drawerState: DrawerState
+) {
+    when (currentDestination?.route) {
+        Routes.Home -> TopSearchAppBar(
+            label = "首页",
+            navigationClick = {
+                scope.launch {
+                    if (drawerState.isClosed) {
+                        drawerState.open()
+                    }
+                }
+            },
+            searchClick = {})
+
+        Routes.Square -> TopSearchAppBar(
+            label = "广场",
+            navigationClick = {
+                scope.launch {
+                    if (drawerState.isClosed) {
+                        drawerState.open()
+                    }
+                }
+            },
+            searchClick = {})
+
+        Routes.Official -> TopSearchAppBar(
+            label = "公众号",
+            navigationClick = {
+                scope.launch {
+                    if (drawerState.isClosed) {
+                        drawerState.open()
+                    }
+                }
+            },
+            searchClick = {})
+
+        Routes.System -> TopSearchAppBar(
+            label = "体系",
+            navigationClick = {
+                scope.launch {
+                    if (drawerState.isClosed) {
+                        drawerState.open()
+                    }
+                }
+            },
+            searchClick = {})
+
+        Routes.Project -> TopSearchAppBar(
+            label = "项目",
+            navigationClick = {
+                scope.launch {
+                    if (drawerState.isClosed) {
+                        drawerState.open()
+                    }
+                }
+            },
+            searchClick = {})
+    }
+}
+
+@Composable
+private fun DrawerContent(
     loginState: Boolean = false,
     loginName: String = "你知道我是谁吗",
     login: () -> Unit = {},
@@ -147,19 +223,13 @@ fun DrawerContent(
 }
 
 @Composable
-fun BottomNavBarView(
-    navController: NavHostController,
-    bottomNav: List<BottomNav> = listOf(
-        BottomNav.Home,
-        BottomNav.Square,
-        BottomNav.Official,
-        BottomNav.System,
-        BottomNav.Project
+private fun BottomNavBarView(
+    navController: NavHostController, bottomNav: List<BottomNav> = listOf(
+        BottomNav.Home, BottomNav.Square, BottomNav.Official, BottomNav.System, BottomNav.Project
     )
 ) {
     BottomNavigation(
-        modifier = Modifier.fillMaxWidth(),
-        backgroundColor = MaterialTheme.colors.background
+        modifier = Modifier.fillMaxWidth(), backgroundColor = MaterialTheme.colors.background
     ) {
         val navBackStackEntry by navController.currentBackStackEntryAsState()
         val currentDestination = navBackStackEntry?.destination
@@ -203,7 +273,7 @@ fun MainPagePreview() {
     WanAndroidTheme {
         Column {
             MainPage()
-            DrawerContent() {
+            DrawerContent {
 
             }
         }

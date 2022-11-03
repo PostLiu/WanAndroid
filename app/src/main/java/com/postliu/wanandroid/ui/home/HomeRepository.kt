@@ -11,6 +11,11 @@ class HomeRepository @Inject constructor(
     private val apiService: ApiService
 ) {
 
+    fun bannerList() = flow {
+        val result = apiService.bannerList().result
+        emit(result)
+    }.flowOn(Dispatchers.IO)
+
     /**
      * 首页置顶文章
      *
@@ -24,9 +29,8 @@ class HomeRepository @Inject constructor(
      * 首页文章
      *
      */
-    fun homeArticle() = launchPagingFromZeroFlow { page ->
-        val result = apiService.homeArticle(page)
-        println("数据：${result.errorCode}->${result.errorMsg}-->${result.data.curPage}")
-        result.data.datas
+    fun homeArticle() = launchPagingFromZeroFlow {
+        val result = apiService.homeArticle(it).result.datas
+        result
     }
 }

@@ -2,6 +2,7 @@ package com.postliu.wanandroid.model
 
 import com.postliu.wanandroid.common.DataResult
 import com.postliu.wanandroid.model.entity.ArticleEntity
+import com.postliu.wanandroid.model.entity.BannerEntity
 import com.postliu.wanandroid.model.entity.HomeArticleEntity
 import com.postliu.wanandroid.model.entity.LoginUserEntity
 import retrofit2.http.Field
@@ -44,15 +45,30 @@ interface ApiService {
     ): DataResult<LoginUserEntity>
 
     /**
+     * 首页轮播图
+     *
+     * @return
+     */
+    @GET("/banner/json")
+    suspend fun bannerList(): DataResult<List<BannerEntity>>
+
+    /**
      * 置顶文章
      *
      */
     @GET("/article/top/json")
     suspend fun stickyPostsArticle(): DataResult<List<ArticleEntity>>
 
+    /**
+     * 首页文章分页列表
+     *
+     * @param page
+     * @param pageSize
+     * @return
+     */
     @GET("/article/list/{page}/json")
     suspend fun homeArticle(
-        @Path("page") page: Int = 0,
+        @Path("page") page: Int,
         @Query("page_size") pageSize: Int = 10
     ): DataResult<HomeArticleEntity>
 
