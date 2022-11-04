@@ -105,51 +105,63 @@ fun MainPage(reLogin: Boolean = false) {
         }
         onDispose {}
     })
-    ModalDrawer(modifier = Modifier.fillMaxSize(), drawerState = drawerState, drawerContent = {
-        DrawerContent(
-            loginState = DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN),
-            loginUser = userInfo?.userInfo ?: LoginUserEntity.empty(),
-            level = userInfo?.coinInfo?.level?.toString().orEmpty(),
-            ranking = userInfo?.coinInfo?.rank.orEmpty(),
-            login = {
-                navController.navigate(Routes.Login)
-                scope.launch {
-                    drawerState.close()
+    ModalDrawer(
+        modifier = Modifier.fillMaxSize(),
+        drawerState = drawerState,
+        gesturesEnabled = currentDestination?.route in listOf(
+            Routes.Home,
+            Routes.Square,
+            Routes.Official,
+            Routes.System,
+            Routes.Project
+        ),
+        drawerContent = {
+            DrawerContent(
+                loginState = DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN),
+                loginUser = userInfo?.userInfo ?: LoginUserEntity.empty(),
+                level = userInfo?.coinInfo?.level?.toString().orEmpty(),
+                ranking = userInfo?.coinInfo?.rank.orEmpty(),
+                login = {
+                    navController.navigate(Routes.Login)
+                    scope.launch {
+                        drawerState.close()
+                    }
+                }, collect = {
+                    navController.navigate(Routes.Collect)
+                    scope.launch {
+                        drawerState.close()
+                    }
                 }
-            }, collect = {
-                navController.navigate(Routes.Collect)
-                scope.launch {
-                    drawerState.close()
+            )
+        },
+        scrimColor = Color(0x50000000),
+        content = {
+            Scaffold(modifier = Modifier
+                .fillMaxSize()
+                .systemBarsPadding()
+                .navigationBarsPadding(),
+                topBar = {
+                    TopBarNavigation(currentDestination, scope, drawerState)
+                },
+                bottomBar = {
+                    BottomBarNavigation(currentDestination, navController)
+                }) {
+                NavHost(
+                    navController = navController,
+                    startDestination = Routes.Home,
+                    modifier = Modifier.padding(it)
+                ) {
+                    home(navController)
+                    square(navController)
+                    official(navController)
+                    system(navController)
+                    project(navController)
+                    login(navController)
+                    register(navController)
+                    userCollect(navController)
                 }
             }
-        )
-    }, scrimColor = Color(0x50000000), content = {
-        Scaffold(modifier = Modifier
-            .fillMaxSize()
-            .systemBarsPadding()
-            .navigationBarsPadding(),
-            topBar = {
-                TopBarNavigation(currentDestination, scope, drawerState)
-            },
-            bottomBar = {
-                BottomBarNavigation(currentDestination, navController)
-            }) {
-            NavHost(
-                navController = navController,
-                startDestination = Routes.Home,
-                modifier = Modifier.padding(it)
-            ) {
-                home(navController)
-                square(navController)
-                official(navController)
-                system(navController)
-                project(navController)
-                login(navController)
-                register(navController)
-                userCollect(navController)
-            }
-        }
-    })
+        })
 }
 
 @Composable

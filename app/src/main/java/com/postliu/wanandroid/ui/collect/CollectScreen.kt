@@ -54,7 +54,10 @@ fun NavGraphBuilder.userCollect(navController: NavController) {
             isRefresh = isRefresh,
             reLoginState = reLoginState,
             popBackStack = { navController.popBackStack() },
-            toLogin = { navController.navigate(Routes.Login) })
+            toLogin = { navController.navigate(Routes.Login) },
+            unCollect = { id, originId ->
+                viewModel.dispatch(CollectAction.UnCollect(id, originId))
+            })
     }
 }
 
@@ -64,7 +67,8 @@ fun UserCollectPage(
     isRefresh: Boolean,
     reLoginState: Boolean,
     popBackStack: () -> Unit = {},
-    toLogin: () -> Unit = {}
+    toLogin: () -> Unit = {},
+    unCollect: (Int, Int) -> Unit = { _, _ -> }
 ) {
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopDefaultAppBar(title = { Text(text = "我的收藏") }, navigationIcon = {
@@ -81,16 +85,29 @@ fun UserCollectPage(
             }
         }
     }) { paddingValues ->
-        RefreshPagingList(lazyPagingItems = article, itemContent = {
-            items(article) { entity ->
-                entity?.let { CollectArticleItem(collectArticle = it) }
-            }
-        }, paddingValues = paddingValues, isRefreshing = isRefresh)
+        RefreshPagingList(
+            lazyPagingItems = article,
+            emptyContent = "还没有收藏的文章",
+            itemContent = {
+                items(article) { entity ->
+                    entity?.let {
+                        CollectArticleItem(collectArticle = it, unCollect = { id, originId ->
+                            unCollect.invoke(id, originId)
+                        })
+                    }
+                }
+            },
+            paddingValues = paddingValues,
+            isRefreshing = isRefresh
+        )
     }
 }
 
 @Composable
-private fun CollectArticleItem(collectArticle: CollectArticleEntity) {
+private fun CollectArticleItem(
+    collectArticle: CollectArticleEntity,
+    unCollect: (Int, Int) -> Unit = { _, _ -> }
+) {
     ListItem(modifier = Modifier
         .fillMaxWidth()
         .background(MaterialTheme.colors.background),
@@ -99,7 +116,9 @@ private fun CollectArticleItem(collectArticle: CollectArticleEntity) {
             Text(text = collectArticle.author)
         },
         trailing = {
-            IconButton(onClick = {}) {
+            IconButton(onClick = {
+                unCollect.invoke(collectArticle.id, collectArticle.originId)
+            }) {
                 Icon(
                     imageVector = Icons.Default.Favorite,
                     contentDescription = null,

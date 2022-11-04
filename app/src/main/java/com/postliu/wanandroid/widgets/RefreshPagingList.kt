@@ -22,18 +22,26 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
+import com.postliu.wanandroid.common.LogUtils
 
 @Composable
 fun <T : Any> RefreshPagingList(
     lazyPagingItems: LazyPagingItems<T>,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
+    emptyContent: String = "没有任何内容",
     listState: LazyListState = rememberLazyListState(),
     paddingValues: PaddingValues = PaddingValues(),
     itemContent: LazyListScope.() -> Unit
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val error = lazyPagingItems.loadState.refresh is LoadState.Error
+    LogUtils.printInfo("状态：${lazyPagingItems.itemSnapshotList.isEmpty()}")
+//    val empty = lazyPagingItems.itemSnapshotList.isEmpty()
+//    if (empty) {
+//        LoadEmpty(emptyContent)
+//        return
+//    }
     if (error) {
         LoadErrorContent {
             lazyPagingItems.retry()
@@ -79,6 +87,13 @@ fun <T : Any> RefreshPagingList(
                 }
             }
         }
+    }
+}
+
+@Composable
+fun LoadEmpty(title: String = "没有任何内容！") {
+    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+        Text(text = title)
     }
 }
 

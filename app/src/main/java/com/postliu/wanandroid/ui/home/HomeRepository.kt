@@ -33,4 +33,14 @@ class HomeRepository @Inject constructor(
         val result = apiService.homeArticle(it).result.datas
         result
     }
+
+    /**
+     * 收藏站内文章
+     *
+     * @param articleId
+     */
+    fun collectArticleInSite(articleId: Int) = flow {
+        val result = apiService.collectArticleInSite(articleId).result
+        emit(result)
+    }.flowOn(Dispatchers.IO)
 }

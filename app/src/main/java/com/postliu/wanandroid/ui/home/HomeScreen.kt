@@ -20,6 +20,11 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -32,6 +37,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
@@ -55,14 +61,17 @@ fun NavGraphBuilder.home(navController: NavController) {
         val bannerList = viewModel.viewState.bannerList
         val sticky = viewModel.viewState.stickyPostsArticle
         val isRefresh = viewModel.viewState.isRefresh
-        HomePage(
-            bannerList = bannerList,
+        LaunchedEffect(key1 = it.maxLifecycle == Lifecycle.State.STARTED, block = {
+            viewModel.dispatch(HomeAction.FetchData)
+        })
+        HomePage(bannerList = bannerList,
             sticky = sticky,
             articleList = homeArticleState,
             isRefresh = isRefresh,
+            onRefresh = { viewModel.dispatch(HomeAction.Refresh) },
             bannerClick = {},
-            articleClick = {}
-        )
+            articleClick = {},
+            collect = { viewModel.dispatch(HomeAction.Collect(it)) })
     }
 }
 
@@ -72,14 +81,16 @@ fun HomePage(
     sticky: List<ArticleEntity>,
     articleList: LazyPagingItems<ArticleEntity>,
     isRefresh: Boolean,
+    onRefresh: () -> Unit = {},
     bannerClick: (BannerEntity) -> Unit = {},
-    articleClick: (ArticleEntity) -> Unit = {}
+    articleClick: (ArticleEntity) -> Unit = {},
+    collect: (Int) -> Unit = {}
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-        RefreshPagingList(
-            paddingValues = paddingValues,
+        RefreshPagingList(paddingValues = paddingValues,
             lazyPagingItems = articleList,
             isRefreshing = isRefresh,
+            onRefresh = { onRefresh() },
             itemContent = {
                 if (bannerList.isNotEmpty()) {
                     item {
@@ -90,17 +101,20 @@ fun HomePage(
                 }
                 if (sticky.isNotEmpty()) {
                     items(sticky) {
-                        HomeArticleView(articleEntity = it, isStick = true) { entity ->
-                            articleClick.invoke(entity)
-                        }
+                        HomeArticleView(
+                            articleEntity = it,
+                            isStick = true,
+                            collect = { entity -> collect.invoke(entity) },
+                            click = { entity -> articleClick.invoke(entity) })
                         Divider()
                     }
                 }
                 items(articleList) { articleEntity ->
-                    articleEntity?.let {
-                        HomeArticleView(articleEntity = it) { entity ->
-                            articleClick.invoke(entity)
-                        }
+                    articleEntity?.let { entity ->
+                        HomeArticleView(
+                            articleEntity = entity,
+                            collect = { collect.invoke(it) },
+                            click = { article -> articleClick.invoke(article) })
                     }
                     Divider()
                 }
@@ -112,15 +126,17 @@ fun HomePage(
 fun HomeArticleView(
     articleEntity: ArticleEntity,
     isStick: Boolean = false,
-    click: (ArticleEntity) -> Unit = {}
+    collect: (Int) -> Unit = {},
+    click: (ArticleEntity) -> Unit = {},
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(MaterialTheme.colors.background)
-            .padding(12.dp)
-            .clickable { click.invoke(articleEntity) }
-    ) {
+    var collected by remember(key1 = articleEntity.collect) {
+        mutableStateOf(articleEntity.collect)
+    }
+    Row(modifier = Modifier
+        .fillMaxWidth()
+        .background(MaterialTheme.colors.background)
+        .padding(12.dp)
+        .clickable { click.invoke(articleEntity) }) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.Top) {
                 if (articleEntity.fresh) {
@@ -168,8 +184,7 @@ fun HomeArticleView(
                     text = buildAnnotatedString {
                         withStyle(
                             SpanStyle().copy(
-                                color = Color.Gray,
-                                fontSize = 12.sp
+                                color = Color.Gray, fontSize = 12.sp
                             )
                         ) {
                             if (articleEntity.superChapterName.isNotEmpty()) {
@@ -178,24 +193,22 @@ fun HomeArticleView(
                             }
                             append(articleEntity.author.ifEmpty { articleEntity.shareUser })
                         }
-                    },
-                    style = MaterialTheme.typography.h1,
-                    color = Color.Gray
+                    }, style = MaterialTheme.typography.h1, color = Color.Gray
                 )
                 Spacer(modifier = Modifier.weight(1f))
                 Text(
-                    text = articleEntity.niceDate,
-                    style = MaterialTheme.typography.h1
+                    text = articleEntity.niceDate, style = MaterialTheme.typography.h1
                 )
             }
         }
         IconButton(onClick = {
-
+            collect(articleEntity.id)
+            collected = !collected
         }) {
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
-                tint = if (articleEntity.collect) Color.Red else Color.Gray
+                tint = if (collected) Color.Red else Color.Gray
             )
         }
     }
@@ -225,48 +238,8 @@ fun Banner(
 @Composable
 fun HomeArticleViewPreview() {
     WanAndroidTheme {
-        val json = "{\n" +
-                "\"adminAdd\": false,\n" +
-                "\"apkLink\": \"\",\n" +
-                "\"audit\": 1,\n" +
-                "\"author\": \"郭霖\",\n" +
-                "\"canEdit\": false,\n" +
-                "\"chapterId\": 409,\n" +
-                "\"chapterName\": \"郭霖\",\n" +
-                "\"collect\": true,\n" +
-                "\"courseId\": 13,\n" +
-                "\"desc\": \"\",\n" +
-                "\"descMd\": \"\",\n" +
-                "\"envelopePic\": \"\",\n" +
-                "\"fresh\": true,\n" +
-                "\"host\": \"\",\n" +
-                "\"id\": 24838,\n" +
-                "\"isAdminAdd\": false,\n" +
-                "\"link\": \"https://mp.weixin.qq.com/s/UmBIVXqKXrjtzSdmUn41pA\",\n" +
-                "\"niceDate\": \"1天前\",\n" +
-                "\"niceShareDate\": \"15小时前\",\n" +
-                "\"origin\": \"\",\n" +
-                "\"prefix\": \"\",\n" +
-                "\"projectLink\": \"\",\n" +
-                "\"publishTime\": 1667232000000,\n" +
-                "\"realSuperChapterId\": 407,\n" +
-                "\"selfVisible\": 0,\n" +
-                "\"shareDate\": 1667314443000,\n" +
-                "\"shareUser\": \"\",\n" +
-                "\"superChapterId\": 408,\n" +
-                "\"superChapterName\": \"公众号\",\n" +
-                "\"tags\": [\n" +
-                "{\n" +
-                "\"name\": \"公众号\",\n" +
-                "\"url\": \"/wxarticle/list/409/1\"\n" +
-                "}\n" +
-                "],\n" +
-                "\"title\": \"Kotlin | 这些隐藏的内存陷阱，你应该熟记于心\",\n" +
-                "\"type\": 0,\n" +
-                "\"userId\": -1,\n" +
-                "\"visible\": 1,\n" +
-                "\"zan\": 0\n" +
-                "}"
+        val json =
+            "{\n" + "\"adminAdd\": false,\n" + "\"apkLink\": \"\",\n" + "\"audit\": 1,\n" + "\"author\": \"郭霖\",\n" + "\"canEdit\": false,\n" + "\"chapterId\": 409,\n" + "\"chapterName\": \"郭霖\",\n" + "\"collect\": true,\n" + "\"courseId\": 13,\n" + "\"desc\": \"\",\n" + "\"descMd\": \"\",\n" + "\"envelopePic\": \"\",\n" + "\"fresh\": true,\n" + "\"host\": \"\",\n" + "\"id\": 24838,\n" + "\"isAdminAdd\": false,\n" + "\"link\": \"https://mp.weixin.qq.com/s/UmBIVXqKXrjtzSdmUn41pA\",\n" + "\"niceDate\": \"1天前\",\n" + "\"niceShareDate\": \"15小时前\",\n" + "\"origin\": \"\",\n" + "\"prefix\": \"\",\n" + "\"projectLink\": \"\",\n" + "\"publishTime\": 1667232000000,\n" + "\"realSuperChapterId\": 407,\n" + "\"selfVisible\": 0,\n" + "\"shareDate\": 1667314443000,\n" + "\"shareUser\": \"\",\n" + "\"superChapterId\": 408,\n" + "\"superChapterName\": \"公众号\",\n" + "\"tags\": [\n" + "{\n" + "\"name\": \"公众号\",\n" + "\"url\": \"/wxarticle/list/409/1\"\n" + "}\n" + "],\n" + "\"title\": \"Kotlin | 这些隐藏的内存陷阱，你应该熟记于心\",\n" + "\"type\": 0,\n" + "\"userId\": -1,\n" + "\"visible\": 1,\n" + "\"zan\": 0\n" + "}"
         val articleEntity = with(GsonUtils) {
             fromJson(json = json, ArticleEntity::class.java)
         }

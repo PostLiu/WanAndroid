@@ -5,13 +5,13 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
 import com.postliu.wanandroid.common.FlowPagingData
 import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.BannerEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.zip
 import kotlinx.coroutines.launch
@@ -23,20 +23,16 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val pager by lazy {
-        repository.homeArticle().cachedIn(viewModelScope)
+        repository.homeArticle()
     }
 
     var viewState by mutableStateOf(HomeViewState(article = pager))
         private set
 
-    init {
-        dispatch(HomeAction.FetchData)
-    }
-
     fun dispatch(action: HomeAction) {
         when (action) {
             is HomeAction.Collect -> {
-
+                collectArticle(articleId = action.id)
             }
 
             is HomeAction.FetchData -> {
@@ -44,13 +40,22 @@ class HomeViewModel @Inject constructor(
             }
 
             is HomeAction.Refresh -> {
-                fetchData()
+                refresh()
             }
 
             is HomeAction.ToDetails -> {
 
             }
         }
+    }
+
+    private fun refresh() {
+        articlePaging()
+        fetchData()
+    }
+
+    private fun articlePaging() {
+        viewState = viewState.copy(article = repository.homeArticle(), isRefresh = false)
     }
 
     private fun fetchData() = viewModelScope.launch {
@@ -65,11 +70,15 @@ class HomeViewModel @Inject constructor(
             viewState = viewState.copy(isRefresh = false)
         }.collect()
     }
+
+    private fun collectArticle(articleId: Int) = viewModelScope.launch {
+        repository.collectArticleInSite(articleId).collect()
+    }
 }
 
 data class HomeViewState(
     val isRefresh: Boolean = false,
     val bannerList: List<BannerEntity> = emptyList(),
     val stickyPostsArticle: List<ArticleEntity> = emptyList(),
-    val article: FlowPagingData<ArticleEntity>
+    val article: FlowPagingData<ArticleEntity> = flowOf()
 )

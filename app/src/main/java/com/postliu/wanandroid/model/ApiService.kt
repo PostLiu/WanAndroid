@@ -94,4 +94,24 @@ interface ApiService {
         @Path("page") page: Int,
         @Query("page_size") pageSize: Int = 10
     ): DataResult<BasePagingEntity<CollectArticleEntity>>
+
+    /**
+     * 用户文章收藏列表的取消收藏
+     *
+     * @param id
+     * @param originId
+     * @return
+     */
+    @FormUrlEncoded
+    @POST("/lg/uncollect/{id}/json")
+    suspend fun collectArticleUnCollect(
+        @Path("id") id: Int,
+        @Field("originId") originId: Int = -1
+    ): DataResult<Any>
+
+
+    @POST("/lg/collect/{article_id}/json")
+    suspend fun collectArticleInSite(
+        @Path("article_id") articleId: Int,
+    ): DataResult<Any>
 }
