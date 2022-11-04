@@ -22,7 +22,6 @@ import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
 import androidx.compose.material.TextButton
-import androidx.compose.material.TopAppBar
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Lock
@@ -54,6 +53,7 @@ import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.common.UIResult
 import com.postliu.wanandroid.common.toast
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
+import com.postliu.wanandroid.widgets.TopDefaultAppBar
 
 fun NavGraphBuilder.login(navController: NavController) {
     composable(Routes.Login) {
@@ -103,7 +103,7 @@ fun LoginPage(
     var userName by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     Scaffold(topBar = {
-        TopAppBar(title = { Text(text = "登录") }, navigationIcon = {
+        TopDefaultAppBar(title = { Text(text = "登录") }, navigationIcon = {
             IconButton(onClick = popBackStack) {
                 Icon(
                     imageVector = Icons.Default.ArrowBack, contentDescription = null
@@ -178,7 +178,7 @@ fun LoginPage(
 @Preview
 @Composable
 fun LoginPagePreview() {
-    WanAndroidTheme {
+    WanAndroidTheme(true) {
         LoginPage()
     }
 }

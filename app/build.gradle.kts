@@ -61,6 +61,7 @@ android {
 dependencies {
     val composeVersion = "1.3.0"
     val accompanistVersion = "0.27.0"
+    implementation("io.github.jeremyliao:live-event-bus-x:1.8.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.paging:paging-compose:1.0.0-alpha17")
     implementation("com.github.zhujiang521:Banner:2.4.0")

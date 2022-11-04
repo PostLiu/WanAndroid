@@ -1,8 +1,10 @@
-@file:OptIn(ExperimentalMaterialApi::class)
+@file:OptIn(ExperimentalMaterialApi::class, ExperimentalLifecycleComposeApi::class)
 
 package com.postliu.wanandroid.ui.collect
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material.ExperimentalMaterialApi
@@ -12,37 +14,47 @@ import androidx.compose.material.ListItem
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Scaffold
 import androidx.compose.material.Text
-import androidx.compose.material.TopAppBar
+import androidx.compose.material.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
+import com.jeremyliao.liveeventbus.LiveEventBus
+import com.postliu.wanandroid.common.BaseConstants
 import com.postliu.wanandroid.common.GsonUtils
 import com.postliu.wanandroid.common.Routes
+import com.postliu.wanandroid.common.collectAsStateWithLifecycle
 import com.postliu.wanandroid.model.entity.CollectArticleEntity
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 import com.postliu.wanandroid.widgets.RefreshPagingList
+import com.postliu.wanandroid.widgets.TopDefaultAppBar
 
 fun NavGraphBuilder.userCollect(navController: NavController) {
     composable(Routes.Collect) {
         val viewModel: UserCollectViewModel = hiltViewModel()
         val viewState = viewModel.viewState
         val isRefresh = viewState.isRefresh
+        val reLoginState by LiveEventBus.get<Boolean>(BaseConstants.RE_LOGIN)
+            .collectAsStateWithLifecycle(initialValue = false)
         val article = viewState.article.collectAsLazyPagingItems()
         UserCollectPage(article = article,
             isRefresh = isRefresh,
-            popBackStack = { navController.popBackStack() })
+            reLoginState = reLoginState,
+            popBackStack = { navController.popBackStack() },
+            toLogin = { navController.navigate(Routes.Login) })
     }
 }
 
@@ -50,14 +62,24 @@ fun NavGraphBuilder.userCollect(navController: NavController) {
 fun UserCollectPage(
     article: LazyPagingItems<CollectArticleEntity>,
     isRefresh: Boolean,
-    popBackStack: () -> Unit = {}
+    reLoginState: Boolean,
+    popBackStack: () -> Unit = {},
+    toLogin: () -> Unit = {}
 ) {
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
-        TopAppBar(title = { Text(text = "我的收藏") }, navigationIcon = {
+        TopDefaultAppBar(title = { Text(text = "我的收藏") }, navigationIcon = {
             IconButton(onClick = { popBackStack() }) {
                 Icon(imageVector = Icons.Default.ArrowBack, contentDescription = null)
             }
         })
+    }, bottomBar = {
+        AnimatedVisibility(visible = reLoginState) {
+            Box(modifier = Modifier.fillMaxWidth()) {
+                TextButton(onClick = toLogin) {
+                    Text(text = "未登录，点击去登录")
+                }
+            }
+        }
     }) { paddingValues ->
         RefreshPagingList(lazyPagingItems = article, itemContent = {
             items(article) { entity ->

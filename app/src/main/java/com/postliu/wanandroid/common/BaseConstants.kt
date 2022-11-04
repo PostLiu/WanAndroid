@@ -11,4 +11,9 @@ object BaseConstants {
      * 处理是否登录的key值
      */
     const val IS_LOGIN = "is_login"
+
+    /**
+     * 重新登录的key值
+     */
+    const val RE_LOGIN = "re_login"
 }

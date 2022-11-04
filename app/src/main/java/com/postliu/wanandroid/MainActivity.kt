@@ -6,8 +6,14 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material.MaterialTheme
 import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
+import com.jeremyliao.liveeventbus.LiveEventBus
+import com.postliu.wanandroid.common.BaseConstants
 import com.postliu.wanandroid.ui.main.MainPage
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 import dagger.hilt.android.AndroidEntryPoint
@@ -18,6 +24,10 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContent {
+            var reLogin by remember { mutableStateOf(false) }
+            LiveEventBus.get<Boolean>(BaseConstants.RE_LOGIN).observe(this) {
+                reLogin = it
+            }
             WanAndroidTheme {
                 val systemUiController = rememberSystemUiController()
                 val useDarkIcons = !isSystemInDarkTheme()
@@ -26,8 +36,9 @@ class MainActivity : ComponentActivity() {
                     systemUiController.setSystemBarsColor(color = statusBarColor, useDarkIcons)
                     onDispose { }
                 }
-                MainPage()
+                MainPage(reLogin)
             }
         }
     }
 }
+

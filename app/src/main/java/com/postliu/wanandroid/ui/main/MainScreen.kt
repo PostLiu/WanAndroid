@@ -40,6 +40,7 @@ import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.material.rememberDrawerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberCoroutineScope
@@ -85,7 +86,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
 @Composable
-fun MainPage() {
+fun MainPage(reLogin: Boolean = false) {
     val navController: NavHostController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -97,6 +98,12 @@ fun MainPage() {
         if (DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN)) {
             viewModel.userInfo()
         }
+    })
+    DisposableEffect(key1 = reLogin, effect = {
+        if (reLogin) {
+            navController.navigate(Routes.Login)
+        }
+        onDispose {}
     })
     ModalDrawer(modifier = Modifier.fillMaxSize(), drawerState = drawerState, drawerContent = {
         DrawerContent(

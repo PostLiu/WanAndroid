@@ -5,6 +5,7 @@ import com.google.gson.ToNumberPolicy
 import com.ihsanbal.logging.Level
 import com.ihsanbal.logging.LoggingInterceptor
 import com.postliu.wanandroid.BuildConfig
+import com.postliu.wanandroid.network.ReLoginInterceptor
 import com.postliu.wanandroid.network.ReceivedCookiesInterceptor
 import com.postliu.wanandroid.network.SetCookiesInterceptor
 import dagger.Module
@@ -27,6 +28,7 @@ object RetrofitModule {
             .addInterceptor(LoggingInterceptor.Builder().setLevel(Level.BODY).build())
             .addInterceptor(ReceivedCookiesInterceptor())
             .addInterceptor(SetCookiesInterceptor())
+            .addInterceptor(ReLoginInterceptor())
             .build()
     }
 
