@@ -6,6 +6,7 @@ import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.BannerEntity
 import com.postliu.wanandroid.model.entity.CollectArticleEntity
 import com.postliu.wanandroid.model.entity.LoginUserEntity
+import com.postliu.wanandroid.model.entity.OfficialTabEntity
 import com.postliu.wanandroid.model.entity.UserEntity
 import retrofit2.http.Field
 import retrofit2.http.FormUrlEncoded
@@ -110,8 +111,35 @@ interface ApiService {
     ): DataResult<Any>
 
 
+    /**
+     * 收藏文章
+     *
+     * @param articleId 文章id
+     * @return
+     */
     @POST("/lg/collect/{article_id}/json")
     suspend fun collectArticleInSite(
         @Path("article_id") articleId: Int,
     ): DataResult<Any>
+
+    /**
+     * 广场数据
+     *
+     * @param page
+     * @param pageSize
+     * @return
+     */
+    @GET("/user_article/list/{page}/json")
+    suspend fun square(
+        @Path("page") page: Int,
+        @Query("page_size") pageSize: Int = 10
+    ): DataResult<BasePagingEntity<ArticleEntity>>
+
+    /**
+     * 公众号列表
+     *
+     * @return
+     */
+    @GET("/wxarticle/chapters/json")
+    suspend fun officialTab(): DataResult<List<OfficialTabEntity>>
 }

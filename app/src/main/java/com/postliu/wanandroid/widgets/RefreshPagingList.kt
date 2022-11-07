@@ -29,19 +29,12 @@ fun <T : Any> RefreshPagingList(
     lazyPagingItems: LazyPagingItems<T>,
     isRefreshing: Boolean = false,
     onRefresh: () -> Unit = {},
-    emptyContent: String = "没有任何内容",
     listState: LazyListState = rememberLazyListState(),
     paddingValues: PaddingValues = PaddingValues(),
     itemContent: LazyListScope.() -> Unit
 ) {
     val swipeRefreshState = rememberSwipeRefreshState(isRefreshing = false)
     val error = lazyPagingItems.loadState.refresh is LoadState.Error
-    LogUtils.printInfo("状态：${lazyPagingItems.itemSnapshotList.isEmpty()}")
-//    val empty = lazyPagingItems.itemSnapshotList.isEmpty()
-//    if (empty) {
-//        LoadEmpty(emptyContent)
-//        return
-//    }
     if (error) {
         LoadErrorContent {
             lazyPagingItems.retry()

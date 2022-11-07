@@ -87,19 +87,17 @@ fun UserCollectPage(
     }) { paddingValues ->
         RefreshPagingList(
             lazyPagingItems = article,
-            emptyContent = "还没有收藏的文章",
-            itemContent = {
-                items(article) { entity ->
-                    entity?.let {
-                        CollectArticleItem(collectArticle = it, unCollect = { id, originId ->
-                            unCollect.invoke(id, originId)
-                        })
-                    }
+            isRefreshing = isRefresh,
+            paddingValues = paddingValues
+        ) {
+            items(article) { entity ->
+                entity?.let {
+                    CollectArticleItem(collectArticle = it, unCollect = { id, originId ->
+                        unCollect.invoke(id, originId)
+                    })
                 }
-            },
-            paddingValues = paddingValues,
-            isRefreshing = isRefresh
-        )
+            }
+        }
     }
 }
 

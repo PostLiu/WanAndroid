@@ -80,7 +80,10 @@ inline fun <reified T : Any> intKeyZeroPagingSource(
                 prevKey = null,
                 nextKey = if (dataList.isEmpty()) null else page + 1
             )
-        }.getOrElse { LoadResult.Error(it) }
+        }.getOrElse {
+            LogUtils.printError("Paging error is $it")
+            LoadResult.Error(it)
+        }
     }
 }
 

@@ -87,38 +87,39 @@ fun HomePage(
     collect: (Int) -> Unit = {}
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
-        RefreshPagingList(paddingValues = paddingValues,
+        RefreshPagingList(
             lazyPagingItems = articleList,
             isRefreshing = isRefresh,
             onRefresh = { onRefresh() },
-            itemContent = {
-                if (bannerList.isNotEmpty()) {
-                    item {
-                        Banner(dataList = bannerList) { entity ->
-                            bannerClick.invoke(entity)
-                        }
+            paddingValues = paddingValues
+        ) {
+            if (bannerList.isNotEmpty()) {
+                item {
+                    Banner(dataList = bannerList) { entity ->
+                        bannerClick.invoke(entity)
                     }
                 }
-                if (sticky.isNotEmpty()) {
-                    items(sticky) {
-                        HomeArticleView(
-                            articleEntity = it,
-                            isStick = true,
-                            collect = { entity -> collect.invoke(entity) },
-                            click = { entity -> articleClick.invoke(entity) })
-                        Divider()
-                    }
-                }
-                items(articleList) { articleEntity ->
-                    articleEntity?.let { entity ->
-                        HomeArticleView(
-                            articleEntity = entity,
-                            collect = { collect.invoke(it) },
-                            click = { article -> articleClick.invoke(article) })
-                    }
+            }
+            if (sticky.isNotEmpty()) {
+                items(sticky) {
+                    HomeArticleView(
+                        articleEntity = it,
+                        isStick = true,
+                        collect = { entity -> collect.invoke(entity) },
+                        click = { entity -> articleClick.invoke(entity) })
                     Divider()
                 }
-            })
+            }
+            items(articleList) { articleEntity ->
+                articleEntity?.let { entity ->
+                    HomeArticleView(
+                        articleEntity = entity,
+                        collect = { collect.invoke(it) },
+                        click = { article -> articleClick.invoke(article) })
+                }
+                Divider()
+            }
+        }
     }
 }
 

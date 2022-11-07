@@ -5,7 +5,6 @@ import com.postliu.wanandroid.common.BaseConstants
 import com.postliu.wanandroid.common.DataResult
 import com.postliu.wanandroid.common.DataStoreUtils
 import com.postliu.wanandroid.common.GsonUtils
-import com.postliu.wanandroid.common.LogUtils
 import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -21,15 +20,12 @@ class ReceivedCookiesInterceptor : Interceptor {
         return chain.proceed(chain.request()).run {
             val cookies = headers("Set-Cookie")
             DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN).also {
-                LogUtils.printInfo("登录标志：$it")
                 if (!it) {
                     cookies.toHashSet().run {
-                        LogUtils.printInfo("设置cookies：$this")
                         DataStoreUtils.save(BaseConstants.COOKIE, this)
                     }
                 }
             }
-            LogUtils.printInfo("线上的Cookies：$cookies")
             this
         }
     }
@@ -45,7 +41,6 @@ class SetCookiesInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         return chain.request().newBuilder().run {
             DataStoreUtils.setStringValue(BaseConstants.COOKIE).forEach { cookies ->
-                LogUtils.printInfo("读取cookies：$cookies")
                 addHeader("Cookie", cookies)
             }
             chain.proceed(build())
