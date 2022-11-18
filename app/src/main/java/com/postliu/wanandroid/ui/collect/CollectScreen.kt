@@ -1,12 +1,12 @@
-@file:OptIn(ExperimentalMaterialApi::class, ExperimentalLifecycleComposeApi::class)
-
 package com.postliu.wanandroid.ui.collect
 
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.material.ExperimentalMaterialApi
 import androidx.compose.material.Icon
 import androidx.compose.material.IconButton
@@ -19,6 +19,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -42,6 +43,7 @@ import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 import com.postliu.wanandroid.widgets.RefreshPagingList
 import com.postliu.wanandroid.widgets.TopDefaultAppBar
 
+@OptIn(ExperimentalLifecycleComposeApi::class)
 fun NavGraphBuilder.userCollect(navController: NavController) {
     composable(Routes.Collect) {
         val viewModel: UserCollectViewModel = hiltViewModel()
@@ -50,25 +52,37 @@ fun NavGraphBuilder.userCollect(navController: NavController) {
         val reLoginState by LiveEventBus.get<Boolean>(BaseConstants.RE_LOGIN)
             .collectAsStateWithLifecycle(initialValue = false)
         val article = viewState.article.collectAsLazyPagingItems()
-        UserCollectPage(article = article,
+        val lazyListState = if (article.itemCount > 0) viewModel.lazyListState else LazyListState()
+        DisposableEffect(key1 = Unit, effect = {
+            viewModel.dispatch(CollectAction.Refresh)
+            onDispose { }
+        })
+        UserCollectPage(lazyListState = lazyListState,
+            article = article,
             isRefresh = isRefresh,
+            onRefresh = { viewModel.dispatch(CollectAction.Refresh) },
             reLoginState = reLoginState,
             popBackStack = { navController.popBackStack() },
             toLogin = { navController.navigate(Routes.Login) },
             unCollect = { id, originId ->
                 viewModel.dispatch(CollectAction.UnCollect(id, originId))
+            }, toDetails = {
+                
             })
     }
 }
 
 @Composable
 fun UserCollectPage(
+    lazyListState: LazyListState,
     article: LazyPagingItems<CollectArticleEntity>,
     isRefresh: Boolean,
+    onRefresh: () -> Unit = {},
     reLoginState: Boolean,
     popBackStack: () -> Unit = {},
     toLogin: () -> Unit = {},
-    unCollect: (Int, Int) -> Unit = { _, _ -> }
+    unCollect: (Int, Int) -> Unit = { _, _ -> },
+    toDetails: (CollectArticleEntity) -> Unit = {}
 ) {
     Scaffold(modifier = Modifier.fillMaxSize(), topBar = {
         TopDefaultAppBar(title = { Text(text = "我的收藏") }, navigationIcon = {
@@ -88,26 +102,34 @@ fun UserCollectPage(
         RefreshPagingList(
             lazyPagingItems = article,
             isRefreshing = isRefresh,
-            paddingValues = paddingValues
+            onRefresh = onRefresh,
+            paddingValues = paddingValues,
+            listState = lazyListState
         ) {
             items(article) { entity ->
                 entity?.let {
-                    CollectArticleItem(collectArticle = it, unCollect = { id, originId ->
-                        unCollect.invoke(id, originId)
-                    })
+                    CollectArticleItem(
+                        collectArticle = it,
+                        unCollect = { id, originId ->
+                            unCollect.invoke(id, originId)
+                        }, toDetails = toDetails
+                    )
                 }
             }
         }
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun CollectArticleItem(
     collectArticle: CollectArticleEntity,
-    unCollect: (Int, Int) -> Unit = { _, _ -> }
+    unCollect: (Int, Int) -> Unit = { _, _ -> },
+    toDetails: (CollectArticleEntity) -> Unit = {}
 ) {
     ListItem(modifier = Modifier
         .fillMaxWidth()
+        .clickable { toDetails(collectArticle) }
         .background(MaterialTheme.colors.background),
         singleLineSecondaryText = true,
         secondaryText = {

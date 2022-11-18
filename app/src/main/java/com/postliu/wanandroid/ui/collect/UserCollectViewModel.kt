@@ -3,6 +3,7 @@
 package com.postliu.wanandroid.ui.collect
 
 import androidx.annotation.Keep
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
@@ -25,6 +26,8 @@ class UserCollectViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val article by lazy { repository.collectArticle() }
+
+    val lazyListState: LazyListState = LazyListState()
 
     var viewState by mutableStateOf(CollectViewState(article = article))
 

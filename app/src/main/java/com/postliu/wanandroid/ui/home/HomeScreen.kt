@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.Divider
 import androidx.compose.material.Icon
@@ -20,15 +21,10 @@ import androidx.compose.material.Text
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Favorite
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
@@ -37,46 +33,60 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.Lifecycle
 import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
+import com.postliu.wanandroid.WanSharedViewModel
 import com.postliu.wanandroid.common.GsonUtils
 import com.postliu.wanandroid.common.Routes
+import com.postliu.wanandroid.common.sharedViewModel
 import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.BannerEntity
+import com.postliu.wanandroid.model.entity.WebData
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 import com.postliu.wanandroid.widgets.RefreshPagingList
 import com.zj.banner.BannerPager
 import com.zj.banner.ui.config.BannerConfig
 
 fun NavGraphBuilder.home(navController: NavController) {
-    composable(Routes.Home) {
-        val context = LocalContext.current
+    composable(Routes.Home) { navBackStackEntry ->
+        val sharedViewModel =
+            navBackStackEntry.sharedViewModel<WanSharedViewModel>(navController = navController)
         val viewModel: HomeViewModel = hiltViewModel()
         val homeArticleState = viewModel.viewState.article.collectAsLazyPagingItems()
         val bannerList = viewModel.viewState.bannerList
         val sticky = viewModel.viewState.stickyPostsArticle
         val isRefresh = viewModel.viewState.isRefresh
-        LaunchedEffect(key1 = it.maxLifecycle == Lifecycle.State.STARTED, block = {
-            viewModel.dispatch(HomeAction.FetchData)
+        val lazyListState =
+            if (homeArticleState.itemCount > 0) viewModel.listState else LazyListState()
+        DisposableEffect(key1 = Unit, effect = {
+            viewModel.dispatch(HomeAction.Refresh)
+            onDispose { }
         })
-        HomePage(bannerList = bannerList,
+        HomePage(
+            lazyListState = lazyListState,
+            bannerList = bannerList,
             sticky = sticky,
             articleList = homeArticleState,
             isRefresh = isRefresh,
             onRefresh = { viewModel.dispatch(HomeAction.Refresh) },
             bannerClick = {},
-            articleClick = {},
-            collect = { viewModel.dispatch(HomeAction.Collect(it)) })
+            articleClick = {
+                val webData = WebData(title = it.title, url = it.link)
+                sharedViewModel.webData = webData
+                navController.navigate(Routes.ArticleDetails)
+            },
+            collect = { viewModel.dispatch(HomeAction.Collect(it)) },
+        )
     }
 }
 
 @Composable
 fun HomePage(
+    lazyListState: LazyListState,
     bannerList: List<BannerEntity> = emptyList(),
     sticky: List<ArticleEntity>,
     articleList: LazyPagingItems<ArticleEntity>,
@@ -84,14 +94,15 @@ fun HomePage(
     onRefresh: () -> Unit = {},
     bannerClick: (BannerEntity) -> Unit = {},
     articleClick: (ArticleEntity) -> Unit = {},
-    collect: (Int) -> Unit = {}
+    collect: (ArticleEntity) -> Unit = {}
 ) {
     Scaffold(modifier = Modifier.fillMaxSize()) { paddingValues ->
         RefreshPagingList(
             lazyPagingItems = articleList,
             isRefreshing = isRefresh,
             onRefresh = { onRefresh() },
-            paddingValues = paddingValues
+            paddingValues = paddingValues,
+            listState = lazyListState
         ) {
             if (bannerList.isNotEmpty()) {
                 item {
@@ -102,8 +113,7 @@ fun HomePage(
             }
             if (sticky.isNotEmpty()) {
                 items(sticky) {
-                    HomeArticleView(
-                        articleEntity = it,
+                    HomeArticleView(articleEntity = it,
                         isStick = true,
                         collect = { entity -> collect.invoke(entity) },
                         click = { entity -> articleClick.invoke(entity) })
@@ -112,8 +122,7 @@ fun HomePage(
             }
             items(articleList) { articleEntity ->
                 articleEntity?.let { entity ->
-                    HomeArticleView(
-                        articleEntity = entity,
+                    HomeArticleView(articleEntity = entity,
                         collect = { collect.invoke(it) },
                         click = { article -> articleClick.invoke(article) })
                 }
@@ -127,17 +136,14 @@ fun HomePage(
 fun HomeArticleView(
     articleEntity: ArticleEntity,
     isStick: Boolean = false,
-    collect: (Int) -> Unit = {},
+    collect: (ArticleEntity) -> Unit = {},
     click: (ArticleEntity) -> Unit = {},
 ) {
-    var collected by remember(key1 = articleEntity.collect) {
-        mutableStateOf(articleEntity.collect)
-    }
     Row(modifier = Modifier
         .fillMaxWidth()
+        .clickable { click.invoke(articleEntity) }
         .background(MaterialTheme.colors.background)
-        .padding(12.dp)
-        .clickable { click.invoke(articleEntity) }) {
+        .padding(12.dp)) {
         Column(modifier = Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.Top) {
                 if (articleEntity.fresh) {
@@ -203,13 +209,12 @@ fun HomeArticleView(
             }
         }
         IconButton(onClick = {
-            collect(articleEntity.id)
-            collected = !collected
+            collect(articleEntity)
         }) {
             Icon(
                 imageVector = Icons.Default.Favorite,
                 contentDescription = null,
-                tint = if (collected) Color.Red else Color.Gray
+                tint = if (articleEntity.collect) Color.Red else Color.Gray
             )
         }
     }

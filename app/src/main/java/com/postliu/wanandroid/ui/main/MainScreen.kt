@@ -73,6 +73,7 @@ import com.postliu.wanandroid.common.DataStoreUtils
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.model.entity.LoginUserEntity
 import com.postliu.wanandroid.ui.collect.userCollect
+import com.postliu.wanandroid.ui.details.articleDetails
 import com.postliu.wanandroid.ui.home.home
 import com.postliu.wanandroid.ui.login.login
 import com.postliu.wanandroid.ui.login.register
@@ -159,6 +160,7 @@ fun MainPage(reLogin: Boolean = false) {
                     login(navController)
                     register(navController)
                     userCollect(navController)
+                    articleDetails(navController)
                 }
             }
         })

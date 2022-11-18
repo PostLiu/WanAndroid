@@ -22,7 +22,6 @@ import androidx.paging.LoadState
 import androidx.paging.compose.LazyPagingItems
 import com.google.accompanist.swiperefresh.SwipeRefresh
 import com.google.accompanist.swiperefresh.rememberSwipeRefreshState
-import com.postliu.wanandroid.common.LogUtils
 
 @Composable
 fun <T : Any> RefreshPagingList(
@@ -80,13 +79,6 @@ fun <T : Any> RefreshPagingList(
                 }
             }
         }
-    }
-}
-
-@Composable
-fun LoadEmpty(title: String = "没有任何内容！") {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = title)
     }
 }
 

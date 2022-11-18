@@ -1,14 +1,22 @@
 package com.postliu.wanandroid.ui.home
 
-import com.postliu.wanandroid.common.launchPagingFromZeroFlow
+import androidx.paging.ExperimentalPagingApi
+import androidx.paging.Pager
+import androidx.paging.PagingConfig
+import androidx.room.withTransaction
+import com.postliu.wanandroid.common.LogUtils
+import com.postliu.wanandroid.dao.WanAndroidDatabase
 import com.postliu.wanandroid.model.ApiService
+import com.postliu.wanandroid.model.entity.ArticleEntity
+import com.postliu.wanandroid.model.remote.ArticleRemoteMediator
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import javax.inject.Inject
 
 class HomeRepository @Inject constructor(
-    private val apiService: ApiService
+    private val apiService: ApiService,
+    private val database: WanAndroidDatabase,
 ) {
 
     fun bannerList() = flow {
@@ -21,26 +29,47 @@ class HomeRepository @Inject constructor(
      *
      */
     fun stickyPostsArticle() = flow {
-        val result = apiService.stickyPostsArticle()
-        emit(result.result)
+        val stickyArticleDao = database.stickyArticleDao()
+        stickyArticleDao.clearStickyArticle(sticky = true)
+        val data = database.withTransaction {
+            val result = apiService.stickyPostsArticle().result.map { it.copy(sticky = true) }
+            stickyArticleDao.saveStickyArticle(result)
+            stickyArticleDao.getStickyArticle(sticky = true)
+        }
+        emit(data)
+    }.flowOn(Dispatchers.IO)
+
+    /**
+     * 收藏置顶文章
+     *
+     * @param article
+     */
+    fun collectStickyArticle(article: ArticleEntity) = flow {
+        val stickyArticleDao = database.stickyArticleDao()
+        val result = database.withTransaction {
+            kotlin.runCatching {
+                apiService.collectArticleInSite(article.id)
+            }.onFailure {
+                LogUtils.printError("收藏失败：$it")
+            }
+            stickyArticleDao.collectedStickyArticle(
+                articleId = article.id,
+                collect = true
+            )
+            stickyArticleDao.getStickyArticle(sticky = true)
+        }
+        emit(result)
     }.flowOn(Dispatchers.IO)
 
     /**
      * 首页文章
      *
      */
-    fun homeArticle() = launchPagingFromZeroFlow {
-        val result = apiService.homeArticle(it).result.datas
-        result
-    }
-
-    /**
-     * 收藏站内文章
-     *
-     * @param articleId
-     */
-    fun collectArticleInSite(articleId: Int) = flow {
-        val result = apiService.collectArticleInSite(articleId).result
-        emit(result)
-    }.flowOn(Dispatchers.IO)
+    @OptIn(ExperimentalPagingApi::class)
+    fun homeArticle() = Pager(
+        config = PagingConfig(pageSize = 10),
+        remoteMediator = ArticleRemoteMediator(apiService, database)
+    ) {
+        database.homeArticleDao().queryPagingSourceArticle(sticky = false)
+    }.flow.flowOn(Dispatchers.IO)
 }

@@ -5,6 +5,7 @@ plugins {
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
     kotlin("kapt")
+    id("kotlin-parcelize")
 }
 
 android {
@@ -24,6 +25,16 @@ android {
         }
 
         buildConfigField("String", "BASE_IP", properties("BASE_URL"))
+
+        javaCompileOptions {
+            annotationProcessorOptions {
+                arguments += mapOf(
+                    "room.schemaLocation" to "$projectDir/schemas",
+                    "room.incremental" to "true",
+                    "room.expandProjection" to "true"
+                )
+            }
+        }
     }
 
     buildTypes {
@@ -61,6 +72,10 @@ android {
 dependencies {
     val composeVersion = "1.3.0"
     val accompanistVersion = "0.27.0"
+    implementation("androidx.room:room-paging:2.4.3")
+    implementation("androidx.room:room-ktx:2.4.3")
+    implementation("androidx.room:room-runtime:2.4.3")
+    kapt("androidx.room:room-compiler:2.4.3")
     implementation("io.github.jeremyliao:live-event-bus-x:1.8.0")
     implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation("androidx.paging:paging-compose:1.0.0-alpha17")
@@ -83,7 +98,7 @@ dependencies {
     implementation("com.google.accompanist:accompanist-drawablepainter:$accompanistVersion")
     implementation("com.google.accompanist:accompanist-systemuicontroller:$accompanistVersion")
     implementation("androidx.core:core-ktx:1.8.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.4.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.5.1")
     implementation("androidx.activity:activity-compose:1.5.1")
     implementation("androidx.compose.ui:ui:$composeVersion")
     implementation("androidx.compose.ui:ui-tooling-preview:$composeVersion")

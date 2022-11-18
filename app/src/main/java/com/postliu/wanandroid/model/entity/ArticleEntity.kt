@@ -2,6 +2,8 @@ package com.postliu.wanandroid.model.entity
 
 
 import androidx.annotation.Keep
+import androidx.room.Entity
+import androidx.room.PrimaryKey
 import com.google.gson.annotations.SerializedName
 
 /**
@@ -22,7 +24,7 @@ import com.google.gson.annotations.SerializedName
  * @property fresh 是否是最新文章
  * @property host
  * @property id
- * @property isAdminAdd
+ * @property hasAdminAdd
  * @property link
  * @property niceDate 文章时间
  * @property niceShareDate 分享文章时间
@@ -42,12 +44,17 @@ import com.google.gson.annotations.SerializedName
  * @property userId
  * @property visible
  * @property zan
+ * @property sticky 是否是置顶文章
  * @constructor Create empty Article entity
  */
+@Entity(tableName = "article")
 @Keep
 data class ArticleEntity(
     @SerializedName("adminAdd")
     val adminAdd: Boolean,
+    @JvmField
+    @SerializedName("isAdminAdd")
+    val hasAdminAdd: Boolean,
     @SerializedName("apkLink")
     val apkLink: String,
     @SerializedName("audit")
@@ -74,10 +81,10 @@ data class ArticleEntity(
     val fresh: Boolean,
     @SerializedName("host")
     val host: String,
+    @PrimaryKey(autoGenerate = true)
+    val uid: Int,
     @SerializedName("id")
     val id: Int,
-    @SerializedName("isAdminAdd")
-    val isAdminAdd: Boolean,
     @SerializedName("link")
     val link: String,
     @SerializedName("niceDate")
@@ -115,7 +122,8 @@ data class ArticleEntity(
     @SerializedName("visible")
     val visible: Int,
     @SerializedName("zan")
-    val zan: Int
+    val zan: Int,
+    val sticky: Boolean,
 ) {
     @Keep
     data class Tag(
@@ -123,5 +131,45 @@ data class ArticleEntity(
         val name: String,
         @SerializedName("url")
         val url: String
+    )
+
+    constructor() : this(
+        false,
+        false,
+        "",
+        0,
+        "",
+        false,
+        0,
+        "",
+        false,
+        0,
+        "",
+        "",
+        "",
+        false,
+        "",
+        0,
+        -1,
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+        0L,
+        0,
+        0,
+        0L,
+        "",
+        0,
+        "",
+        emptyList(),
+        "",
+        0,
+        0,
+        0,
+        0,
+        false
     )
 }

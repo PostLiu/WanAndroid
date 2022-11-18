@@ -1,16 +1,19 @@
 package com.postliu.wanandroid.ui.home
 
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.cachedIn
 import com.postliu.wanandroid.common.FlowPagingData
 import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.BannerEntity
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.flow.onStart
 import kotlinx.coroutines.flow.zip
@@ -23,8 +26,10 @@ class HomeViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val pager by lazy {
-        repository.homeArticle()
+        repository.homeArticle().cachedIn(viewModelScope)
     }
+
+    val listState: LazyListState = LazyListState()
 
     var viewState by mutableStateOf(HomeViewState(article = pager))
         private set
@@ -32,7 +37,7 @@ class HomeViewModel @Inject constructor(
     fun dispatch(action: HomeAction) {
         when (action) {
             is HomeAction.Collect -> {
-                collectArticle(articleId = action.id)
+                collectArticle(article = action.article)
             }
 
             is HomeAction.FetchData -> {
@@ -50,12 +55,7 @@ class HomeViewModel @Inject constructor(
     }
 
     private fun refresh() {
-        articlePaging()
         fetchData()
-    }
-
-    private fun articlePaging() {
-        viewState = viewState.copy(article = repository.homeArticle(), isRefresh = false)
     }
 
     private fun fetchData() = viewModelScope.launch {
@@ -71,8 +71,10 @@ class HomeViewModel @Inject constructor(
         }.collect()
     }
 
-    private fun collectArticle(articleId: Int) = viewModelScope.launch {
-        repository.collectArticleInSite(articleId).collect()
+    private fun collectArticle(article: ArticleEntity) = viewModelScope.launch {
+        repository.collectStickyArticle(article = article).collectLatest {
+            viewState = viewState.copy(stickyPostsArticle = it)
+        }
     }
 }
 
