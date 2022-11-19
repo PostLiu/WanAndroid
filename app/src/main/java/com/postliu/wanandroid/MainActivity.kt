@@ -11,6 +11,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.lifecycleScope
 import com.google.accompanist.systemuicontroller.rememberSystemUiController
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.postliu.wanandroid.common.BaseConstants
@@ -24,7 +25,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
-        DataStoreUtils.init(this)
+        DataStoreUtils.init(this, lifecycleScope)
         setContent {
             var reLogin by remember { mutableStateOf(false) }
             LiveEventBus.get<Boolean>(BaseConstants.RE_LOGIN).observe(this) {

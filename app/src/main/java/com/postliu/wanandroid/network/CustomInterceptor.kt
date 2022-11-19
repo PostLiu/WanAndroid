@@ -19,10 +19,12 @@ class ReceivedCookiesInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         return chain.proceed(chain.request()).run {
             val cookies = headers("Set-Cookie")
-            val isLogin = DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN)
-            if (!isLogin) {
-                cookies.toHashSet().run {
-                    DataStoreUtils.putData(BaseConstants.COOKIE, this)
+            DataStoreUtils.launch {
+                val isLogin = DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN)
+                if (!isLogin) {
+                    cookies.toHashSet().run {
+                        DataStoreUtils.putData(BaseConstants.COOKIE, this)
+                    }
                 }
             }
             this
@@ -40,8 +42,10 @@ class SetCookiesInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
 
         return chain.request().newBuilder().run {
-            DataStoreUtils.setStringValue(BaseConstants.COOKIE).forEach {
-                addHeader("Cookie", it)
+            DataStoreUtils.launch {
+                DataStoreUtils.setStringValue(BaseConstants.COOKIE).forEach {
+                    addHeader("Cookie", it)
+                }
             }
             chain.proceed(build())
         }

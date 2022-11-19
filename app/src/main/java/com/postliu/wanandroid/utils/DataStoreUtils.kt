@@ -11,25 +11,33 @@ import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import com.postliu.wanandroid.common.dataStore
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.CoroutineStart
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
+import kotlin.coroutines.CoroutineContext
+import kotlin.coroutines.EmptyCoroutineContext
 
-@OptIn(DelicateCoroutinesApi::class)
 object DataStoreUtils {
 
     private lateinit var dataStore: DataStore<Preferences>
 
-    fun init(context: Context) {
+    private lateinit var coroutineScope: CoroutineScope
+
+    fun init(context: Context, scope: CoroutineScope) {
         dataStore = context.dataStore
+        coroutineScope = scope
     }
 
+    fun launch(
+        context: CoroutineContext = EmptyCoroutineContext,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit
+    ) = coroutineScope.launch(context, start, block)
+
     @Suppress("UNCHECKED_CAST")
-    fun putData(key: String, value: Any) = GlobalScope.launch {
+    fun putData(key: String, value: Any) = coroutineScope.launch {
         with(dataStore) {
             when (value) {
                 is Long -> edit { it[longPreferencesKey(key)] = value }
@@ -43,29 +51,23 @@ object DataStoreUtils {
         }
     }
 
-    fun longValue(key: String) = runBlocking(Dispatchers.IO) {
+    suspend fun longValue(key: String) =
         dataStore.data.map { it[longPreferencesKey(key)] ?: 0L }.first()
-    }
 
-    fun doubleValue(key: String) = runBlocking(Dispatchers.IO) {
+    suspend fun doubleValue(key: String) =
         dataStore.data.map { it[doublePreferencesKey(key)] ?: 0.0 }.first()
-    }
 
-    fun stringValue(key: String) = runBlocking(Dispatchers.IO) {
+    suspend fun stringValue(key: String) =
         dataStore.data.map { it[stringPreferencesKey(key)].orEmpty() }.first()
-    }
 
-    fun booleanValue(key: String) = runBlocking(Dispatchers.IO) {
+    suspend fun booleanValue(key: String) =
         dataStore.data.map { it[booleanPreferencesKey(key)] ?: false }.first()
-    }
 
-    fun intValue(key: String) = runBlocking(Dispatchers.IO) {
+    suspend fun intValue(key: String) =
         dataStore.data.map { it[intPreferencesKey(key)] ?: 0 }.first()
-    }
 
-    fun setStringValue(key: String) = runBlocking(Dispatchers.IO) {
+    suspend fun setStringValue(key: String) =
         dataStore.data.map { it[stringSetPreferencesKey(key)] ?: emptySet() }.first()
-    }
 
     fun booleanValueFlow(key: String) =
         dataStore.data.map { it[booleanPreferencesKey(key)] ?: false }
