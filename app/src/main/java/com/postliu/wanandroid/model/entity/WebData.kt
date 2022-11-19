@@ -2,7 +2,7 @@ package com.postliu.wanandroid.model.entity
 
 import android.net.Uri
 import androidx.annotation.Keep
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.GsonUtils
 
 @Keep
 

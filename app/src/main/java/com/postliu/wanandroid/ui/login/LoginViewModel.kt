@@ -3,9 +3,9 @@ package com.postliu.wanandroid.ui.login
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.postliu.wanandroid.common.BaseConstants
-import com.postliu.wanandroid.common.DataStoreUtils
 import com.postliu.wanandroid.common.UIResult
 import com.postliu.wanandroid.model.entity.LoginUserEntity
+import com.postliu.wanandroid.utils.DataStoreUtils
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -35,7 +35,7 @@ class LoginViewModel @Inject constructor(
         }.catch {
             mLoginState.emit(UIResult.Throwable(it))
         }.collectLatest {
-            DataStoreUtils.save(BaseConstants.IS_LOGIN, true)
+            DataStoreUtils.putData(BaseConstants.IS_LOGIN, true)
             mLoginState.emit(it)
         }
     }

@@ -35,7 +35,7 @@ import androidx.navigation.compose.composable
 import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.GsonUtils
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme

@@ -1,3 +1,7 @@
+import com.android.build.gradle.internal.api.ApkVariantOutputImpl
+import java.io.FileInputStream
+import java.util.Properties
+
 fun properties(key: String) = project.findProperty(key).toString()
 
 plugins {
@@ -7,6 +11,10 @@ plugins {
     kotlin("kapt")
     id("kotlin-parcelize")
 }
+
+val keystorePropertiesFile = rootProject.file("keystore.properties")
+val keystoreProperties = Properties()
+keystoreProperties.load(FileInputStream(keystorePropertiesFile))
 
 android {
     namespace = "com.postliu.wanandroid"
@@ -37,12 +45,43 @@ android {
         }
     }
 
+    signingConfigs {
+        getByName("debug") {
+            storeFile = file(keystoreProperties.getValue("storeFile"))
+            storePassword = "${keystoreProperties.getValue("storePassword")}"
+            keyAlias = "${keystoreProperties.getValue("keyAlias")}"
+            keyPassword = "${keystoreProperties.getValue("keyPassword")}"
+        }
+        register("release") {
+            storeFile = file(keystoreProperties.getValue("storeFile"))
+            storePassword = "${keystoreProperties.getValue("storePassword")}"
+            keyAlias = "${keystoreProperties.getValue("keyAlias")}"
+            keyPassword = "${keystoreProperties.getValue("keyPassword")}"
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             )
+            signingConfig = signingConfigs.getByName("release")
+        }
+        debug {
+            isMinifyEnabled = false
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
+            )
+            signingConfig = signingConfigs.getByName("debug")
+        }
+    }
+
+    applicationVariants.all {
+        outputs.all {
+            if (this is ApkVariantOutputImpl) {
+                outputFileName = "wanandroid-${buildType.name}-${defaultConfig.versionName}.apk"
+            }
         }
     }
 

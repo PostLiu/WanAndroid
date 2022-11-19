@@ -3,8 +3,8 @@ package com.postliu.wanandroid.network
 import com.jeremyliao.liveeventbus.LiveEventBus
 import com.postliu.wanandroid.common.BaseConstants
 import com.postliu.wanandroid.common.DataResult
-import com.postliu.wanandroid.common.DataStoreUtils
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.DataStoreUtils
+import com.postliu.wanandroid.utils.GsonUtils
 import okhttp3.Interceptor
 import okhttp3.Response
 import okhttp3.ResponseBody.Companion.toResponseBody
@@ -19,11 +19,10 @@ class ReceivedCookiesInterceptor : Interceptor {
     override fun intercept(chain: Interceptor.Chain): Response {
         return chain.proceed(chain.request()).run {
             val cookies = headers("Set-Cookie")
-            DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN).also {
-                if (!it) {
-                    cookies.toHashSet().run {
-                        DataStoreUtils.save(BaseConstants.COOKIE, this)
-                    }
+            val isLogin = DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN)
+            if (!isLogin) {
+                cookies.toHashSet().run {
+                    DataStoreUtils.putData(BaseConstants.COOKIE, this)
                 }
             }
             this
@@ -39,9 +38,10 @@ class ReceivedCookiesInterceptor : Interceptor {
 class SetCookiesInterceptor : Interceptor {
 
     override fun intercept(chain: Interceptor.Chain): Response {
+
         return chain.request().newBuilder().run {
-            DataStoreUtils.setStringValue(BaseConstants.COOKIE).forEach { cookies ->
-                addHeader("Cookie", cookies)
+            DataStoreUtils.setStringValue(BaseConstants.COOKIE).forEach {
+                addHeader("Cookie", it)
             }
             chain.proceed(build())
         }
@@ -63,8 +63,8 @@ class ReLoginInterceptor : Interceptor {
                     fromJson(string.orEmpty(), DataResult::class.java)
                 }
                 if (result.errorCode == -1001) {
-                    DataStoreUtils.save(BaseConstants.IS_LOGIN, false)
-                    DataStoreUtils.save(BaseConstants.COOKIE, "")
+                    DataStoreUtils.putData(BaseConstants.IS_LOGIN, false)
+                    DataStoreUtils.putData(BaseConstants.COOKIE, "")
                     LiveEventBus.get<Boolean>(BaseConstants.RE_LOGIN).post(true)
                     responseBody?.close()
                     fakeResponse(chain)

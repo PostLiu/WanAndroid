@@ -15,7 +15,7 @@ import androidx.navigation.NavController
 import androidx.navigation.NavGraphBuilder
 import androidx.navigation.compose.composable
 import com.google.gson.reflect.TypeToken
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.GsonUtils
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.model.entity.OfficialTabEntity
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme

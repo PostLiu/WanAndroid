@@ -7,32 +7,31 @@ import androidx.paging.RemoteMediator
 import androidx.room.withTransaction
 import com.postliu.wanandroid.dao.WanAndroidDatabase
 import com.postliu.wanandroid.model.ApiService
-import com.postliu.wanandroid.model.entity.ArticleEntity
 import com.postliu.wanandroid.model.entity.ArticlePageKey
+import com.postliu.wanandroid.model.entity.CollectArticleEntity
 
 @OptIn(ExperimentalPagingApi::class)
-class ArticleRemoteMediator(
+class UserCollectArticleRemoteMediator(
     private val apiService: ApiService,
     private val database: WanAndroidDatabase
-) : RemoteMediator<Int, ArticleEntity>() {
+) : RemoteMediator<Int, CollectArticleEntity>() {
 
     companion object {
-        private const val keyName = "article_key"
+        private const val keyName = "collect_key"
     }
 
     override suspend fun load(
-        loadType: LoadType, state: PagingState<Int, ArticleEntity>
+        loadType: LoadType,
+        state: PagingState<Int, CollectArticleEntity>
     ): MediatorResult {
         return kotlin.runCatching {
-            val stickyArticleDao = database.homeArticleDao()
-            val articleKeyDao = database.articleKeyDao()
+            val articleDao = database.userCollectArticleDao()
+            val keyDao = database.articleKeyDao()
             val pageKey = when (loadType) {
                 LoadType.REFRESH -> null
                 LoadType.PREPEND -> return MediatorResult.Success(endOfPaginationReached = true)
                 LoadType.APPEND -> {
-                    val remoteKey = database.withTransaction {
-                        articleKeyDao.getRemoteKey(keyName)
-                    }
+                    val remoteKey = database.withTransaction { keyDao.getRemoteKey(keyName) }
                     if (remoteKey?.page == null) {
                         return MediatorResult.Success(endOfPaginationReached = true)
                     }
@@ -40,18 +39,17 @@ class ArticleRemoteMediator(
                 }
             }
             val page = pageKey ?: 0
-            val query =
-                apiService.homeArticle(page = page).result.datas.map { it.copy(sticky = false) }
+            val query = apiService.collectArticle(page = page).result.datas
             val endOfPaginationReached = query.isEmpty()
             database.withTransaction {
                 if (loadType == LoadType.REFRESH) {
-                    stickyArticleDao.clearAll(sticky = false)
-                    articleKeyDao.clearRemoteKey(keyName)
+                    articleDao.clearAll()
+                    keyDao.clearRemoteKey(keyName)
                 }
                 val nextPage = if (endOfPaginationReached) null else page + 1
                 val key = ArticlePageKey(id = keyName, page = nextPage)
-                stickyArticleDao.insert(query)
-                articleKeyDao.insert(key = key)
+                articleDao.insert(query)
+                keyDao.insert(key = key)
             }
             MediatorResult.Success(endOfPaginationReached = endOfPaginationReached)
         }.getOrElse { MediatorResult.Error(it) }

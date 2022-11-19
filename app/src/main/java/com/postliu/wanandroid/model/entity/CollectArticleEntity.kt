@@ -1,11 +1,16 @@
 package com.postliu.wanandroid.model.entity
 
 
-import com.google.gson.annotations.SerializedName
 import androidx.annotation.Keep
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import com.google.gson.annotations.SerializedName
 
+@Entity(tableName = "user_collect")
 @Keep
 data class CollectArticleEntity(
+    @PrimaryKey(autoGenerate = true)
+    val uid: Int,
     @SerializedName("author")
     val author: String,
     @SerializedName("chapterId")
@@ -38,4 +43,6 @@ data class CollectArticleEntity(
     val visible: Int,
     @SerializedName("zan")
     val zan: Int
-)
+) {
+    constructor() : this(0, "", 0, "", 0, "", "", 0, "", "", "", 0, 0L, "", 0, 0, 0)
+}

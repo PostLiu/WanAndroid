@@ -34,18 +34,22 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import com.jeremyliao.liveeventbus.LiveEventBus
+import com.postliu.wanandroid.WanSharedViewModel
 import com.postliu.wanandroid.common.BaseConstants
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.GsonUtils
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.common.collectAsStateWithLifecycle
+import com.postliu.wanandroid.common.sharedViewModel
 import com.postliu.wanandroid.model.entity.CollectArticleEntity
+import com.postliu.wanandroid.model.entity.WebData
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
 import com.postliu.wanandroid.widgets.RefreshPagingList
 import com.postliu.wanandroid.widgets.TopDefaultAppBar
 
 @OptIn(ExperimentalLifecycleComposeApi::class)
 fun NavGraphBuilder.userCollect(navController: NavController) {
-    composable(Routes.Collect) {
+    composable(Routes.Collect) { navBackStackEntry ->
+        val sharedViewModel: WanSharedViewModel = navBackStackEntry.sharedViewModel(navController)
         val viewModel: UserCollectViewModel = hiltViewModel()
         val viewState = viewModel.viewState
         val isRefresh = viewState.isRefresh
@@ -54,7 +58,7 @@ fun NavGraphBuilder.userCollect(navController: NavController) {
         val article = viewState.article.collectAsLazyPagingItems()
         val lazyListState = if (article.itemCount > 0) viewModel.lazyListState else LazyListState()
         DisposableEffect(key1 = Unit, effect = {
-            viewModel.dispatch(CollectAction.Refresh)
+            viewModel.dispatch(CollectAction.FetchData)
             onDispose { }
         })
         UserCollectPage(lazyListState = lazyListState,
@@ -67,7 +71,9 @@ fun NavGraphBuilder.userCollect(navController: NavController) {
             unCollect = { id, originId ->
                 viewModel.dispatch(CollectAction.UnCollect(id, originId))
             }, toDetails = {
-                
+                val webData = WebData(title = it.title, url = it.link)
+                sharedViewModel.webData = webData
+                navController.navigate(Routes.ArticleDetails)
             })
     }
 }

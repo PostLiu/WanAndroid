@@ -1,4 +1,4 @@
-package com.postliu.wanandroid.common
+package com.postliu.wanandroid.utils
 
 import android.util.Log
 import com.postliu.wanandroid.BuildConfig

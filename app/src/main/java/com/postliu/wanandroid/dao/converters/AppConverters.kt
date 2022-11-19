@@ -2,7 +2,7 @@ package com.postliu.wanandroid.dao.converters
 
 import androidx.room.TypeConverter
 import com.google.gson.reflect.TypeToken
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.GsonUtils
 import com.postliu.wanandroid.model.entity.ArticleEntity
 
 /**

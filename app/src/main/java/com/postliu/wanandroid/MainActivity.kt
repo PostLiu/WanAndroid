@@ -16,6 +16,7 @@ import com.jeremyliao.liveeventbus.LiveEventBus
 import com.postliu.wanandroid.common.BaseConstants
 import com.postliu.wanandroid.ui.main.MainPage
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
+import com.postliu.wanandroid.utils.DataStoreUtils
 import dagger.hilt.android.AndroidEntryPoint
 
 @AndroidEntryPoint
@@ -23,6 +24,7 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         WindowCompat.setDecorFitsSystemWindows(window, false)
+        DataStoreUtils.init(this)
         setContent {
             var reLogin by remember { mutableStateOf(false) }
             LiveEventBus.get<Boolean>(BaseConstants.RE_LOGIN).observe(this) {

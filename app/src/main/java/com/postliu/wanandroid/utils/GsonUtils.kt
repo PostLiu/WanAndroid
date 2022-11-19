@@ -1,4 +1,4 @@
-package com.postliu.wanandroid.common
+package com.postliu.wanandroid.utils
 
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken

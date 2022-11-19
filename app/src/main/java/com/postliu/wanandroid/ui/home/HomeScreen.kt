@@ -40,7 +40,7 @@ import androidx.paging.compose.LazyPagingItems
 import androidx.paging.compose.collectAsLazyPagingItems
 import androidx.paging.compose.items
 import com.postliu.wanandroid.WanSharedViewModel
-import com.postliu.wanandroid.common.GsonUtils
+import com.postliu.wanandroid.utils.GsonUtils
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.common.sharedViewModel
 import com.postliu.wanandroid.model.entity.ArticleEntity

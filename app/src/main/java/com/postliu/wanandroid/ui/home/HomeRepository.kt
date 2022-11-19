@@ -4,7 +4,7 @@ import androidx.paging.ExperimentalPagingApi
 import androidx.paging.Pager
 import androidx.paging.PagingConfig
 import androidx.room.withTransaction
-import com.postliu.wanandroid.common.LogUtils
+import com.postliu.wanandroid.utils.LogUtils
 import com.postliu.wanandroid.dao.WanAndroidDatabase
 import com.postliu.wanandroid.model.ApiService
 import com.postliu.wanandroid.model.entity.ArticleEntity

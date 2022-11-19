@@ -1,5 +1,3 @@
-@file:OptIn(ExperimentalMaterialApi::class, ExperimentalLifecycleComposeApi::class)
-
 package com.postliu.wanandroid.ui.main
 
 import android.content.res.Resources
@@ -69,7 +67,6 @@ import androidx.navigation.compose.rememberNavController
 import coil.compose.rememberAsyncImagePainter
 import com.postliu.wanandroid.R
 import com.postliu.wanandroid.common.BaseConstants
-import com.postliu.wanandroid.common.DataStoreUtils
 import com.postliu.wanandroid.common.Routes
 import com.postliu.wanandroid.model.entity.LoginUserEntity
 import com.postliu.wanandroid.ui.collect.userCollect
@@ -82,21 +79,25 @@ import com.postliu.wanandroid.ui.project.project
 import com.postliu.wanandroid.ui.square.square
 import com.postliu.wanandroid.ui.system.system
 import com.postliu.wanandroid.ui.theme.WanAndroidTheme
+import com.postliu.wanandroid.utils.DataStoreUtils
 import com.postliu.wanandroid.widgets.TopSearchAppBar
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@OptIn(ExperimentalLifecycleComposeApi::class)
 @Composable
 fun MainPage(reLogin: Boolean = false) {
     val navController: NavHostController = rememberNavController()
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
     val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val isLogin by DataStoreUtils.booleanValueFlow(BaseConstants.IS_LOGIN)
+        .collectAsStateWithLifecycle(initialValue = false)
     val currentDestination = navBackStackEntry?.destination
     val scope = rememberCoroutineScope()
     val viewModel: MainViewModel = hiltViewModel()
     val userInfo by viewModel.userState.collectAsStateWithLifecycle()
     LaunchedEffect(key1 = drawerState.isOpen, block = {
-        if (DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN)) {
+        if (isLogin) {
             viewModel.userInfo()
         }
     })
@@ -118,7 +119,7 @@ fun MainPage(reLogin: Boolean = false) {
         ),
         drawerContent = {
             DrawerContent(
-                loginState = DataStoreUtils.booleanValue(BaseConstants.IS_LOGIN),
+                loginState = isLogin,
                 loginUser = userInfo?.userInfo ?: LoginUserEntity.empty(),
                 level = userInfo?.coinInfo?.level?.toString().orEmpty(),
                 ranking = userInfo?.coinInfo?.rank.orEmpty(),
@@ -226,6 +227,7 @@ private fun TopBarNavigation(
     }
 }
 
+@OptIn(ExperimentalMaterialApi::class)
 @Composable
 private fun DrawerContent(
     loginState: Boolean = true,
